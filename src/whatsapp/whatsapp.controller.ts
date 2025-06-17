@@ -8,10 +8,12 @@ import {
   Headers,
   HttpException,
   HttpStatus,
+  // Param,
 } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service';
 import { WhatsappWebhookPayload } from './interfaces/whatsapp.interface';
 import * as crypto from 'crypto';
+// import { AiPersonaType } from 'src/ai-personas/interfaces/ai-persona.interface';
 
 @Controller('whatsapp')
 export class WhatsappController {
@@ -21,18 +23,19 @@ export class WhatsappController {
     (() => {
       throw new Error('WHATSAPP_VERIFY_TOKEN environment variable is not set');
     })();
-  private readonly APP_SECRET =
-    process.env.META_WA_APP_SECRET ||
+  private readonly ACCESS_TOKEN =
+    process.env.WHATSAPP_ACCESS_TOKEN ||
     (() => {
-      throw new Error('META_WA_APP_SECRET environment variable is not set');
+      throw new Error('WHATSAPP_ACCESS_TOKEN environment variable is not set');
     })();
 
   constructor(private readonly whatsappService: WhatsappService) {}
 
-  @Post('webhook')
+  @Post(':personaType/webhook')
   async handleWebhook(
     @Body() payload: WhatsappWebhookPayload,
     @Headers('x-hub-signature-256') signature: string,
+    // @Param('personaType') personaType: AiPersonaType,
   ) {
     try {
       // Verify the request is from WhatsApp
@@ -52,7 +55,7 @@ export class WhatsappController {
     }
   }
 
-  @Get('webhook')
+  @Get(':personaType/webhook')
   verifyWebhook(
     @Query('hub.mode') mode: string,
     @Query('hub.verify_token') token: string,
@@ -95,7 +98,7 @@ export class WhatsappController {
     }
 
     const expectedSignature = `sha256=${crypto
-      .createHmac('sha256', this.APP_SECRET)
+      .createHmac('sha256', this.ACCESS_TOKEN)
       .update(JSON.stringify(payload))
       .digest('hex')}`;
 
