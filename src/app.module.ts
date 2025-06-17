@@ -7,6 +7,7 @@ import { LlmModule } from './llm/llm.module';
 import { AiPersonasModule } from './ai-personas/ai-personas.module';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RagModule } from './rag/rag.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AiPersonasModule,
     UserModule,
     PrismaModule,
+    RagModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

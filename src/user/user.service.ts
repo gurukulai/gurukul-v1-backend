@@ -54,4 +54,16 @@ export class UserService {
       },
     });
   }
+
+  async getLatestMessages(
+    userId: number,
+    personaType: AiPersonaType,
+    limit: number,
+  ): Promise<Message[]> {
+    return await this.prisma.message.findMany({
+      where: { userId, personaType },
+      orderBy: { timestamp: 'desc' },
+      take: limit,
+    });
+  }
 }

@@ -58,7 +58,16 @@ export class WhatsappController {
     }
 
     this.logger.log('Received webhook payload:', payload);
-    return this.whatsappService.handleIncomingMessage(payload, personaType);
+    const response = await this.whatsappService.handleIncomingMessage(
+      payload,
+      personaType,
+    );
+
+    if (response.status === 'terminated') {
+      throw new HttpException(response.message, HttpStatus.GONE);
+    }
+
+    return response;
   }
 
   @Get(':personaType/webhook')

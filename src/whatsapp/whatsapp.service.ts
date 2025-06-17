@@ -70,6 +70,14 @@ export class WhatsappService {
       personaType,
     );
 
+    // Save user message
+    void this.userService.saveConversation(
+      user.id,
+      personaType,
+      message.body,
+      true,
+    );
+
     // Get system prompt for the persona
     const systemPrompt = this.aiPersonasService.getSystemPrompt(personaType);
     const systemMessage = new SystemMessage(systemPrompt);
@@ -90,15 +98,8 @@ export class WhatsappService {
       chatHistory,
     );
 
-    // Save both user message and AI response
-    await this.userService.saveConversation(
-      user.id,
-      personaType,
-      message.body,
-      true,
-    );
-
-    await this.userService.saveConversation(
+    // Save AI response
+    void this.userService.saveConversation(
       user.id,
       personaType,
       aiResponse,
@@ -106,7 +107,29 @@ export class WhatsappService {
     );
 
     // Send the response back to the user via WhatsApp
-    await this.sendWhatsAppMessage(message.from, aiResponse);
+    void this.sendWhatsAppMessage(message.from, aiResponse);
+
+    // Wait for 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    // Check if any new messages arrived during the wait
+    const newMessages = await this.userService.getLatestMessages(
+      user.id,
+      personaType,
+      1,
+    );
+
+    if (
+      newMessages.length > 0 &&
+      newMessages[0].fromUser &&
+      newMessages[0].timestamp > new Date(message.timestamp)
+    ) {
+      this.logger.log('New message received during wait period, terminating');
+      return {
+        status: 'terminated',
+        message: 'New message received, terminating previous response',
+      };
+    }
 
     return {
       status: 'success',
