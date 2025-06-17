@@ -6,58 +6,99 @@ import {
   Query,
   Logger,
   Headers,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service';
+import { WhatsappWebhookPayload } from './interfaces/whatsapp.interface';
+import * as crypto from 'crypto';
 
 @Controller('whatsapp')
 export class WhatsappController {
   private readonly logger = new Logger(WhatsappController.name);
   private readonly VERIFY_TOKEN =
-    process.env.WHATSAPP_VERIFY_TOKEN || 'your-verify-token';
+    process.env.WHATSAPP_VERIFY_TOKEN ||
+    (() => {
+      throw new Error('WHATSAPP_VERIFY_TOKEN environment variable is not set');
+    })();
+  private readonly APP_SECRET =
+    process.env.META_WA_APP_SECRET ||
+    (() => {
+      throw new Error('META_WA_APP_SECRET environment variable is not set');
+    })();
 
   constructor(private readonly whatsappService: WhatsappService) {}
 
   @Post('webhook')
   async handleWebhook(
-    @Body() payload: any,
-    @Headers('x-hub-signature') signature: string,
+    @Body() payload: WhatsappWebhookPayload,
+    @Headers('x-hub-signature-256') signature: string,
   ) {
-    // Verify the request is from WhatsApp
-    if (!this.verifyWhatsAppRequest(signature, payload)) {
-      this.logger.error('Invalid WhatsApp request signature');
-      return { status: 'error', message: 'Invalid signature' };
-    }
+    try {
+      // Verify the request is from WhatsApp
+      if (!this.verifyWhatsAppRequest(signature, payload)) {
+        this.logger.error('Invalid WhatsApp request signature');
+        throw new HttpException('Invalid signature', HttpStatus.FORBIDDEN);
+      }
 
-    this.logger.log('Received webhook payload:', payload);
-    return this.whatsappService.handleIncomingMessage(payload);
+      this.logger.log('Received webhook payload:', payload);
+      return this.whatsappService.handleIncomingMessage(payload);
+    } catch (error) {
+      this.logger.error('Webhook processing error:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Bad request', HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Get('webhook')
-  async verifyWebhook(
+  verifyWebhook(
     @Query('hub.mode') mode: string,
     @Query('hub.verify_token') token: string,
     @Query('hub.challenge') challenge: string,
   ) {
     this.logger.log('Verifying webhook');
 
-    if (mode === 'subscribe' && token === this.VERIFY_TOKEN) {
-      this.logger.log('Webhook verified');
+    if (!mode || !token || !challenge) {
+      throw new HttpException(
+        'Missing required parameters',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (mode !== 'subscribe') {
+      throw new HttpException('Invalid mode', HttpStatus.BAD_REQUEST);
+    }
+
+    if (token === this.VERIFY_TOKEN) {
+      this.logger.log('Webhook verified successfully');
       return challenge;
     }
 
-    this.logger.error('Webhook verification failed');
-    return 'Verification failed';
+    this.logger.error('Webhook verification failed - invalid token');
+    throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
   }
 
-  private verifyWhatsAppRequest(signature: string, payload: any): boolean {
+  private verifyWhatsAppRequest(
+    signature: string,
+    payload: WhatsappWebhookPayload,
+  ): boolean {
     // In development/localhost, we can bypass this check
     if (process.env.NODE_ENV === 'development') {
       return true;
     }
 
-    // In production, implement proper signature verification
-    // This is a placeholder - you should implement proper HMAC verification
-    // using your WhatsApp app secret
-    return true;
+    if (!signature) {
+      this.logger.error('Missing X-Hub-Signature-256 header');
+      return false;
+    }
+
+    const expectedSignature = `sha256=${crypto
+      .createHmac('sha256', this.APP_SECRET)
+      .update(JSON.stringify(payload))
+      .digest('hex')}`;
+
+    return signature === expectedSignature;
   }
 }

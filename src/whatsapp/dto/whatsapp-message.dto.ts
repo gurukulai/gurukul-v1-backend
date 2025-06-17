@@ -1,4 +1,4 @@
-export class WhatsappMessageDto {
+export interface WhatsappMessageDto {
   from: string;
   body: string;
   type: string;
@@ -6,18 +6,18 @@ export class WhatsappMessageDto {
   messageId: string;
 }
 
-export class WhatsappImageMessageDto extends WhatsappMessageDto {
+export interface WhatsappImageMessageDto extends WhatsappMessageDto {
   imageUrl: string;
   caption?: string;
 }
 
-export class WhatsappDocumentMessageDto extends WhatsappMessageDto {
+export interface WhatsappDocumentMessageDto extends WhatsappMessageDto {
   documentUrl: string;
   fileName: string;
   mimeType: string;
 }
 
-export class WhatsappWebhookDto {
+export interface WhatsappWebhookDto {
   object: string;
   entry: Array<{
     id: string;

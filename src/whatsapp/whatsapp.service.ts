@@ -1,189 +1,101 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import {
-  WhatsappMessageDto,
-  WhatsappImageMessageDto,
-  WhatsappDocumentMessageDto,
-} from './dto/whatsapp-message.dto';
 import { AiPersonasService } from '../ai-personas/ai-personas.service';
 import { AiPersonaType } from '../ai-personas/interfaces/ai-persona.interface';
+import {
+  WhatsappMessage,
+  WhatsappWebhookPayload,
+} from './interfaces/whatsapp.interface';
+import { UserService } from '../user/user.service';
+import { LlmService } from '../llm/llm.service';
+import {
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+} from '@langchain/core/messages';
 
 @Injectable()
 export class WhatsappService {
   private readonly logger = new Logger(WhatsappService.name);
   private readonly personaPhoneNumbers: Record<string, AiPersonaType> = {
-    '+1234567890': AiPersonaType.THERAPIST, // Replace with actual phone numbers
-    '+1234567891': AiPersonaType.DIETICIAN, // Replace with actual phone numbers
-    '+1234567892': AiPersonaType.CAREER, // Replace with actual phone numbers
+    '+1234567890': 'THERAPIST',
+    '+1234567891': 'DIETICIAN',
+    '+1234567892': 'CAREER',
   };
 
   constructor(
-    private readonly prisma: PrismaService,
+    // private readonly prisma: PrismaService,
     private readonly aiPersonasService: AiPersonasService,
+    private readonly userService: UserService,
+    private readonly llmService: LlmService,
   ) {}
 
-  async handleIncomingMessage(message: any) {
-    this.logger.log('Received WhatsApp message:', message);
+  async handleIncomingMessage(payload: WhatsappWebhookPayload) {
+    this.logger.log('Received WhatsApp message:', payload);
 
-    // Extract message details
-    const { from, body, type } = message;
+    // Extract the first message from the webhook payload
+    const message = payload.entry[0]?.changes[0]?.value.messages[0];
+    if (!message) throw new Error('No message found in webhook payload');
 
     // Find or create user
-    const user = await this.findOrCreateUser(from);
+    const user = await this.userService.findOrCreateWhatsAppUser(message.from);
+    if (!(message.to in this.personaPhoneNumbers))
+      throw new Error('Phone number not recognized');
 
     // Check if this is a message to one of our AI personas
     const personaType = this.personaPhoneNumbers[message.to];
-    if (personaType) {
-      return this.handleAiPersonaMessage(user.id, personaType, message);
-    }
-
-    // Handle regular messages
-    return this.handleRegularMessage(user.id, message);
+    await this.handleAiPersonaMessage(user.id, personaType, message);
+    return { status: 'success', message: 'Message processed' };
   }
 
   private async handleAiPersonaMessage(
     userId: number,
     personaType: AiPersonaType,
-    message: any,
+    message: WhatsappMessage,
   ) {
-    try {
-      // Get or create conversation
-      const conversation = await this.getOrCreateConversation(
-        userId,
-        personaType,
-      );
+    // Get conversation history
+    const history = await this.userService.getConversationHistory(
+      userId,
+      personaType,
+    );
 
-      // Get conversation history
-      const history = await this.getConversationHistory(conversation.id);
+    // Get system prompt for the persona
+    const systemPrompt = this.aiPersonasService.getSystemPrompt(personaType);
+    const systemMessage = new SystemMessage(systemPrompt);
 
-      // Prepare context for AI
-      const context = {
-        type: personaType,
-        conversationHistory: history.map((msg) => ({
-          role: msg.fromUser ? 'user' : 'assistant',
-          content: msg.content,
-        })),
-      };
+    // Convert history to LangChain messages
+    const chatHistory = history.map((msg) =>
+      msg.fromUser
+        ? new HumanMessage({ content: msg.message as string })
+        : new AIMessage({ content: msg.message as string }),
+    );
 
-      // Get AI response
-      const aiResponse = await this.aiPersonasService.getResponse(
-        context,
-        message.body,
-        process.env.OPENAI_API_KEY || '',
-      );
+    // Get AI response using LangChain
+    const aiResponse = await this.llmService.chatWithOpenAI(
+      message.body,
+      process.env.OPENAI_API_KEY,
+      process.env.OPENAI_MODEL,
+      systemMessage,
+      chatHistory,
+    );
 
-      // Save both user message and AI response
-      await this.saveWhatsappMessage(conversation.id, message.body, true);
-      await this.saveWhatsappMessage(
-        conversation.id,
-        aiResponse.message,
-        false,
-      );
+    // Save both user message and AI response
+    await this.userService.saveConversation(
+      userId,
+      personaType,
+      message.body,
+      false,
+    );
 
-      return {
-        status: 'success',
-        message: aiResponse.message,
-      };
-    } catch (error) {
-      this.logger.error(`Error handling AI persona message: ${error.message}`);
-      throw error;
-    }
-  }
+    await this.userService.saveConversation(
+      userId,
+      personaType,
+      aiResponse,
+      true,
+    );
 
-  private async getOrCreateConversation(
-    userId: number,
-    personaType: AiPersonaType,
-  ) {
-    const existingConversation =
-      await this.prisma.whatsappConversation.findFirst({
-        where: {
-          userId,
-          personaType,
-        },
-        orderBy: {
-          updatedAt: 'desc',
-        },
-      });
-
-    if (existingConversation) {
-      return existingConversation;
-    }
-
-    return this.prisma.whatsappConversation.create({
-      data: {
-        userId,
-        personaType,
-      },
-    });
-  }
-
-  private async getConversationHistory(conversationId: number) {
-    return this.prisma.whatsappMessage.findMany({
-      where: {
-        conversationId,
-      },
-      orderBy: {
-        timestamp: 'asc',
-      },
-    });
-  }
-
-  private async saveWhatsappMessage(
-    conversationId: number,
-    content: string,
-    fromUser: boolean,
-    metadata?: any,
-  ) {
-    return this.prisma.whatsappMessage.create({
-      data: {
-        conversationId,
-        content,
-        fromUser,
-        metadata,
-      },
-    });
-  }
-
-  private async findOrCreateUser(phoneNumber: string) {
-    let user = await this.prisma.user.findUnique({
-      where: { phoneNumber },
-    });
-
-    if (!user) {
-      // Create a new user with a random password (they'll never use it)
-      const randomPassword = Math.random().toString(36).slice(-8);
-      user = await this.prisma.user.create({
-        data: {
-          phoneNumber,
-          email: `${phoneNumber}@whatsapp.user`, // Temporary email
-          password: randomPassword,
-          name: `WhatsApp User ${phoneNumber}`,
-        },
-      });
-      this.logger.log(`Created new user for phone number: ${phoneNumber}`);
-    }
-
-    return user;
-  }
-
-  private async handleRegularMessage(userId: number, message: any) {
-    // Handle regular messages (non-AI persona)
-    const response = {
+    return {
       status: 'success',
-      message: 'Regular message received',
+      message: aiResponse,
     };
-
-    // Store the message
-    await this.prisma.message.create({
-      data: {
-        userId,
-        content: message.body,
-        type: message.type,
-        fromUser: true,
-        metadata: message,
-      },
-    });
-
-    return response;
   }
 }

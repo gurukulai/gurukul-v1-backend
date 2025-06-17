@@ -1,36 +1,41 @@
-import { Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
+import { Injectable } from '@nestjs/common';
+import { ChatOpenAI } from '@langchain/openai';
+import {
+  HumanMessage,
+  SystemMessage,
+  AIMessage,
+  BaseMessage,
+} from '@langchain/core/messages';
 
 @Injectable()
 export class LlmService {
-  private readonly logger = new Logger(LlmService.name);
+  // private readonly logger = new Logger(LlmService.name);
 
   // Example for OpenAI GPT-3/4 API
   async chatWithOpenAI(
     prompt: string,
-    apiKey: string,
-    model = 'gpt-3.5-turbo',
+    apiKey: string | undefined = process.env.OPENAI_API_KEY,
+    model: string | undefined = process.env.OPENAI_MODEL,
+    SystemMessage?: SystemMessage,
+    chatHistory?: Array<HumanMessage | AIMessage>,
   ): Promise<string> {
-    try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model,
-          messages: [{ role: 'user', content: prompt }],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      return response.data.choices[0].message.content.trim();
-    } catch (error) {
-      this.logger.error('Error communicating with OpenAI:', error);
-      throw error;
-    }
-  }
+    if (!apiKey) throw new Error('OpenAI API key is required in .env file');
+    if (!model) throw new Error('OpenAI model is required in .env file');
 
-  // You can add more methods for other LLM providers here
+    const chat = new ChatOpenAI({
+      openAIApiKey: apiKey,
+      modelName: model,
+    });
+
+    const messages: BaseMessage[] = [];
+
+    // Add chat history
+    if (SystemMessage) messages.push(SystemMessage);
+    messages.push(...(chatHistory || []));
+    messages.push(new HumanMessage(prompt));
+
+    const response = await chat.invoke(messages);
+    const content = response.content;
+    return typeof content === 'string' ? content : JSON.stringify(content);
+  }
 }

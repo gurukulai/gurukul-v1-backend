@@ -1,16 +1,9 @@
-export enum AiPersonaType {
-  THERAPIST = 'therapist',
-  DIETICIAN = 'dietician',
-  CAREER = 'career',
-}
+export type AiPersonaType = 'THERAPIST' | 'DIETICIAN' | 'CAREER';
 
 export interface AiPersonaConfig {
-  name: string;
-  description: string;
   systemPrompt: string;
-  greeting: string;
-  capabilities: string[];
-  limitations: string[];
+  description: string;
+  exampleQuestions?: string[];
 }
 
 export interface AiPersonaResponse {
@@ -21,9 +14,9 @@ export interface AiPersonaResponse {
 
 export interface AiPersonaContext {
   type: AiPersonaType;
-  conversationHistory: Array<{
-    role: string;
+  userId?: string;
+  conversationHistory?: Array<{
+    role: 'user' | 'assistant';
     content: string;
   }>;
-  userPreferences?: Record<string, any>;
 }

@@ -15,44 +15,21 @@ datasource db {
 }
 
 model User {
-  id                    Int                    @id @default(autoincrement())
-  email                 String                 @unique
-  password              String
-  name                  String?
-  phoneNumber           String                 @unique
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  messages              Message[]
-  whatsappConversations WhatsappConversation[]
+  id          Int       @id @default(autoincrement())
+  name        String?
+  phoneNumber String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  content   String
-  type      String // text, image, document
-  fromUser  Boolean // true if from user, false if from system
-  timestamp DateTime @default(now())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  metadata  Json? // For storing additional message data like image URLs, document info, etc.
-}
-
-model WhatsappConversation {
-  id          Int               @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   userId      Int
-  user        User              @relation(fields: [userId], references: [id])
-  personaType String // therapist, dietician, career
-  messages    WhatsappMessage[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-}
-
-model WhatsappMessage {
-  id             Int                  @id @default(autoincrement())
-  content        String
-  fromUser       Boolean // true if from user, false if from AI
-  timestamp      DateTime             @default(now())
-  conversationId Int
-  conversation   WhatsappConversation @relation(fields: [conversationId], references: [id])
-  metadata       Json? // For storing additional message data
+  user        User     @relation(fields: [userId], references: [id])
+  personaType String
+  message     String
+  fromUser    Boolean // true if from user, false if from AI
+  timestamp   DateTime @default(now())
+  metadata    Json? // For storing additional message data like image URLs, document info, etc.
 }
