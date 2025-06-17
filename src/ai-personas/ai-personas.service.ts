@@ -13,7 +13,7 @@ export class AiPersonasService {
     this.personas = config as Record<AiPersonaType, AiPersonaConfig>;
   }
 
-  getPersonaConfig(type: AiPersonaType): AiPersonaConfig {
+  private getPersonaConfig(type: AiPersonaType): AiPersonaConfig {
     return (
       this.personas[type] ||
       (() => {
@@ -25,12 +25,5 @@ export class AiPersonasService {
   getSystemPrompt(type: AiPersonaType): string {
     const persona = this.getPersonaConfig(type);
     return persona.systemPrompt;
-  }
-
-  getAllSystemPrompts(): string {
-    const prompts = Object.entries(this.personas).map(
-      ([type, config]) => `${type}:\n${config.systemPrompt}\n`,
-    );
-    return prompts.join('\n---\n\n');
   }
 }
