@@ -3,7 +3,7 @@ import { WhatsappController } from './whatsapp.controller';
 import { WhatsappService } from './whatsapp.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiPersonasModule } from '../ai-personas/ai-personas.module';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 import { LlmModule } from '../llm/llm.module';
 
 @Module({

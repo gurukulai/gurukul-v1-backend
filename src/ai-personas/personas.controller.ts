@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
 import { AiPersonasService } from './ai-personas.service';
 import { TrainingDataService } from './training-data.service';
 import { ConversationLearningService } from './conversation-learning.service';
+import { ConversationTesterService } from './conversation-tester.service';
 import { 
   AiPersonaType, 
   AiPersonaResponse, 
@@ -27,7 +28,8 @@ export class PersonasController {
   constructor(
     private readonly aiPersonasService: AiPersonasService,
     private readonly trainingDataService: TrainingDataService,
-    private readonly conversationLearningService: ConversationLearningService
+    private readonly conversationLearningService: ConversationLearningService,
+    private readonly conversationTesterService: ConversationTesterService
   ) {}
 
   /**
@@ -315,5 +317,30 @@ export class PersonasController {
       nodeEnv: process.env.NODE_ENV || 'NOT SET',
       port: process.env.PORT || 'NOT SET'
     };
+  }
+
+  @Post('test-priya')
+  async testPriyaConversations(): Promise<any> {
+    try {
+      const results = await this.conversationTesterService.runAllTests();
+      const report = await this.conversationTesterService.generateTestReport(results);
+      
+      return {
+        success: true,
+        summary: {
+          totalTests: results.length,
+          passedTests: results.filter(r => r.passed).length,
+          failedTests: results.filter(r => !r.passed).length,
+          successRate: `${((results.filter(r => r.passed).length / results.length) * 100).toFixed(1)}%`
+        },
+        results,
+        report
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error?.message || 'Unknown error occurred during testing'
+      };
+    }
   }
 } 

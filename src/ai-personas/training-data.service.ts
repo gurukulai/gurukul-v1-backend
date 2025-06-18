@@ -13,10 +13,34 @@ export class TrainingDataService {
 
   constructor() {
     try {
-      const priyaDataPath = path.join(__dirname, 'training-data', 'priya.json');
-      const priyaData = fs.readFileSync(priyaDataPath, 'utf-8');
-      this.priyaTrainingData = JSON.parse(priyaData);
-      this.logger.log('Successfully loaded Priya training data.');
+      // Try multiple possible paths for the training data
+      const possiblePaths = [
+        path.join(__dirname, 'training-data', 'priya.json'),
+        path.join(process.cwd(), 'src', 'ai-personas', 'training-data', 'priya.json'),
+        path.join(process.cwd(), 'dist', 'src', 'ai-personas', 'training-data', 'priya.json')
+      ];
+
+      let priyaData: string | null = null;
+      let usedPath: string | null = null;
+
+      for (const tryPath of possiblePaths) {
+        try {
+          if (fs.existsSync(tryPath)) {
+            priyaData = fs.readFileSync(tryPath, 'utf-8');
+            usedPath = tryPath;
+            break;
+          }
+        } catch (err) {
+          // Continue to next path
+        }
+      }
+
+      if (priyaData) {
+        this.priyaTrainingData = JSON.parse(priyaData);
+        this.logger.log(`Successfully loaded Priya training data from: ${usedPath}`);
+      } else {
+        throw new Error('Could not find priya.json in any expected location');
+      }
     } catch (error) {
       if (error instanceof Error) {
         this.logger.error('Failed to load Priya training data.', error.stack);

@@ -3,7 +3,6 @@ import { AiPersonasService } from '../ai-personas/ai-personas.service';
 import { AiPersonaType, AiPersonaContext } from '../ai-personas/interfaces/ai-persona.interface';
 import { WhatsappWebhookPayload } from './interfaces/whatsapp.interface';
 import { UserService } from '../user/user.service';
-import { LlmService } from '../llm/llm.service';
 import axios from 'axios';
 
 @Injectable()
@@ -16,7 +15,6 @@ export class WhatsappService {
     // private readonly prisma: PrismaService,
     private readonly aiPersonasService: AiPersonasService,
     private readonly userService: UserService,
-    private readonly llmService: LlmService,
   ) {
     if (!this.PHONE_NUMBER_ID || !this.ACCESS_TOKEN) {
       throw new Error(
