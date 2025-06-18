@@ -42,32 +42,27 @@ export class RagService {
     metadata: Partial<DocumentMetadata> = {},
     options: DocumentProcessingOptions = {},
   ): Promise<string[]> {
-    try {
-      this.logger.log('Adding document to knowledge base');
+    this.logger.log('Adding document to knowledge base');
 
-      // Process document into chunks
-      const chunks = this.documentProcessor.processDocument(
-        content,
-        metadata,
-        options,
-      );
+    // Process document into chunks
+    const chunks = await this.documentProcessor.processDocument(
+      content,
+      metadata,
+      options,
+    );
 
-      // Convert chunks to processed documents
-      const processedDocs: ProcessedDocument[] = chunks.map((chunk) => ({
-        content: chunk.content,
-        metadata: chunk.metadata,
-      }));
+    // Convert chunks to processed documents
+    const processedDocs: ProcessedDocument[] = chunks.map((chunk) => ({
+      content: chunk.content,
+      metadata: chunk.metadata,
+    }));
 
-      // Store documents with embeddings
-      const documentIds =
-        await this.embeddingsManager.storeDocuments(processedDocs);
+    // Store documents with embeddings
+    const documentIds =
+      await this.embeddingsManager.storeDocuments(processedDocs);
 
-      this.logger.log(`Added ${documentIds.length} document chunks`);
-      return documentIds;
-    } catch (error) {
-      this.logger.error('Error adding document:', error);
-      throw new Error(`Failed to add document: ${error}`);
-    }
+    this.logger.log(`Added ${String(documentIds.length)} document chunks`);
+    return documentIds;
   }
 
   /**
@@ -80,37 +75,34 @@ export class RagService {
       options?: DocumentProcessingOptions;
     }>,
   ): Promise<string[]> {
-    try {
-      this.logger.log(`Adding ${documents.length} documents to knowledge base`);
+    this.logger.log(`Adding ${documents.length} documents to knowledge base`);
 
-      const allProcessedDocs: ProcessedDocument[] = [];
+    const allProcessedDocs: ProcessedDocument[] = [];
 
-      // Process all documents
-      for (const doc of documents) {
-        const chunks = this.documentProcessor.processDocument(
-          doc.content,
-          doc.metadata || {},
-          doc.options || {},
-        );
+    // Process all documents
+    for (const doc of documents) {
+      const chunks = await this.documentProcessor.processDocument(
+        doc.content,
+        doc.metadata || {},
+        doc.options || {},
+      );
 
-        const processedDocs: ProcessedDocument[] = chunks.map((chunk) => ({
-          content: chunk.content,
-          metadata: chunk.metadata,
-        }));
+      const processedDocs: ProcessedDocument[] = chunks.map((chunk) => ({
+        content: chunk.content,
+        metadata: chunk.metadata,
+      }));
 
-        allProcessedDocs.push(...processedDocs);
-      }
-
-      // Store all documents
-      const documentIds =
-        await this.embeddingsManager.storeDocuments(allProcessedDocs);
-
-      this.logger.log(`Added ${documentIds.length} total document chunks`);
-      return documentIds;
-    } catch (error) {
-      this.logger.error('Error adding documents:', error);
-      throw new Error(`Failed to add documents: ${error}`);
+      allProcessedDocs.push(...processedDocs);
     }
+
+    // Store all documents
+    const documentIds =
+      await this.embeddingsManager.storeDocuments(allProcessedDocs);
+
+    this.logger.log(
+      `Added ${String(documentIds.length)} total document chunks`,
+    );
+    return documentIds;
   }
 
   /**
@@ -120,20 +112,15 @@ export class RagService {
     query: string,
     options: SearchOptions = {},
   ): Promise<SearchResult[]> {
-    try {
-      this.logger.log(`Searching for: "${query}"`);
+    this.logger.log(`Searching for: "${query}"`);
 
-      const results = await this.embeddingsManager.searchSimilarDocuments(
-        query,
-        options,
-      );
+    const results = await this.embeddingsManager.searchSimilarDocuments(
+      query,
+      options,
+    );
 
-      this.logger.log(`Found ${results.length} similar documents`);
-      return results;
-    } catch (error) {
-      this.logger.error('Error searching documents:', error);
-      throw new Error(`Failed to search documents: ${error}`);
-    }
+    this.logger.log(`Found ${results.length} similar documents`);
+    return results;
   }
 
   /**
@@ -207,7 +194,8 @@ export class RagService {
       };
     } catch (error) {
       this.logger.error('Error generating RAG response:', error);
-      throw new Error(`Failed to generate RAG response: ${error}`);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to generate RAG response: ${errMsg}`);
     }
   }
 
@@ -235,7 +223,8 @@ export class RagService {
       return completion.choices[0]?.message?.content || 'No response generated';
     } catch (error) {
       this.logger.error('Error generating response:', error);
-      throw new Error(`Failed to generate response: ${error}`);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to generate response: ${errMsg}`);
     }
   }
 
@@ -243,13 +232,8 @@ export class RagService {
    * Delete a document
    */
   async deleteDocument(documentId: string): Promise<void> {
-    try {
-      await this.embeddingsManager.deleteDocument(documentId);
-      this.logger.log(`Document ${documentId} deleted`);
-    } catch (error) {
-      this.logger.error('Error deleting document:', error);
-      throw new Error(`Failed to delete document: ${error}`);
-    }
+    await this.embeddingsManager.deleteDocument(documentId);
+    this.logger.log(`Document ${documentId} deleted`);
   }
 
   /**
@@ -259,40 +243,25 @@ export class RagService {
     documentId: string,
     metadata: Partial<DocumentMetadata>,
   ): Promise<void> {
-    try {
-      await this.embeddingsManager.updateDocumentMetadata(documentId, metadata);
-      this.logger.log(`Document ${documentId} metadata updated`);
-    } catch (error) {
-      this.logger.error('Error updating document metadata:', error);
-      throw new Error(`Failed to update document metadata: ${error}`);
-    }
+    await this.embeddingsManager.updateDocumentMetadata(documentId, metadata);
+    this.logger.log(`Document ${documentId} metadata updated`);
   }
 
   /**
    * Get document statistics
    */
   async getDocumentStats() {
-    try {
-      const stats = await this.embeddingsManager.getDocumentStats();
-      this.logger.log('Retrieved document statistics');
-      return stats;
-    } catch (error) {
-      this.logger.error('Error getting document stats:', error);
-      throw new Error(`Failed to get document stats: ${error}`);
-    }
+    const stats = await this.embeddingsManager.getDocumentStats();
+    this.logger.log('Retrieved document statistics');
+    return stats;
   }
 
   /**
    * Debug method to get raw documents and check embeddings
    */
   async debugGetDocuments() {
-    try {
-      const result = await this.embeddingsManager.debugGetDocuments();
-      this.logger.log('Retrieved debug document info');
-      return result;
-    } catch (error) {
-      this.logger.error('Error getting debug documents:', error);
-      throw new Error(`Failed to get debug documents: ${error}`);
-    }
+    const result = await this.embeddingsManager.debugGetDocuments();
+    this.logger.log('Retrieved debug document info');
+    return result;
   }
 }
