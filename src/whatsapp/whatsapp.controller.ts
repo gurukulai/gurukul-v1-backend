@@ -64,7 +64,7 @@ export class WhatsappController {
     );
 
     if (response.status === 'terminated') {
-      throw new HttpException(response.message, HttpStatus.GONE);
+      throw new HttpException(response.message || 'Service terminated', HttpStatus.GONE);
     }
 
     return response;

@@ -19,6 +19,7 @@ export class LlmService {
     SystemMessage?: SystemMessage,
     chatHistory?: Array<HumanMessage | AIMessage>,
   ): Promise<string> {
+
     if (!apiKey) throw new Error('OpenAI API key is required in .env file');
     if (!model) throw new Error('OpenAI model is required in .env file');
 

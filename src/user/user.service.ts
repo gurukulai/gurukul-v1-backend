@@ -33,7 +33,7 @@ export class UserService {
     return await this.prisma.message.findMany({
       where: { userId, personaType },
       orderBy: { timestamp: 'desc' },
-      take: 10, // Limit to last 10 conversations
+      take: 50, // Limit to last 50 conversations
     });
   }
 

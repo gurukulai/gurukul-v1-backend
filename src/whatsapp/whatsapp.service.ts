@@ -1,15 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiPersonasService } from '../ai-personas/ai-personas.service';
-import { AiPersonaType } from '../ai-personas/interfaces/ai-persona.interface';
+import { AiPersonaType, AiPersonaContext } from '../ai-personas/interfaces/ai-persona.interface';
 import { WhatsappWebhookPayload } from './interfaces/whatsapp.interface';
 import { UserService } from '../user/user.service';
 import { LlmService } from '../llm/llm.service';
-import {
-  SystemMessage,
-  HumanMessage,
-  AIMessage,
-} from '@langchain/core/messages';
-import { Message } from '@prisma/client';
 import axios from 'axios';
 
 @Injectable()
@@ -52,34 +46,6 @@ export class WhatsappService {
     );
   }
 
-  private async generateAIResponse(
-    userMessage: string,
-    personaType: AiPersonaType,
-    history: Message[],
-  ): Promise<string> {
-    // Get system prompt for the persona
-    const systemPrompt = this.aiPersonasService.getSystemPrompt(personaType);
-    const systemMessage = new SystemMessage(systemPrompt);
-
-    // Convert history to LangChain messages
-    const chatHistory = history.map((msg) =>
-      msg.fromUser
-        ? new HumanMessage({ content: String(msg.message) })
-        : new AIMessage({ content: String(msg.message) }),
-    );
-
-    // Get AI response using LangChain
-    const aiResponse = await this.llmService.chatWithOpenAI(
-      userMessage,
-      process.env.OPENAI_API_KEY,
-      process.env.OPENAI_MODEL,
-      systemMessage,
-      chatHistory,
-    );
-
-    return aiResponse;
-  }
-
   async handleIncomingMessage(
     payload: WhatsappWebhookPayload,
     personaType: AiPersonaType,
@@ -93,12 +59,6 @@ export class WhatsappService {
     // Find or create user
     const user = await this.userService.findOrCreateWhatsAppUser(message.from);
 
-    // Get conversation history
-    const history = await this.userService.getConversationHistory(
-      user.id,
-      personaType,
-    );
-
     // Save user message
     await this.userService.saveConversation(
       user.id,
@@ -107,38 +67,37 @@ export class WhatsappService {
       true,
     );
 
-    // Wait for 5 seconds
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    const newMessages = await this.userService.getLatestMessages(
-      user.id,
-      personaType,
-      1,
-    );
-
-    if (newMessages.length !== 0) return { status: 'success' };
+    const context: AiPersonaContext = {
+      type: personaType,
+      userId: user.id.toString(),
+    };
 
     // Generate AI response
-    const aiResponse = await this.generateAIResponse(
+    const aiResponse = await this.aiPersonasService.getEnhancedResponse(
       message.body,
       personaType,
-      history,
+      context,
     );
 
-    // Save AI response
-    void this.userService.saveConversation(
-      user.id,
-      personaType,
-      aiResponse,
-      false,
-    );
+    const messages = Array.isArray(aiResponse.message)
+      ? aiResponse.message
+      : [aiResponse.message];
 
-    // Send the response back to the user via WhatsApp
-    void this.sendWhatsAppMessage(message.from, aiResponse);
+    for (const msg of messages) {
+      // Save AI response
+      await this.userService.saveConversation(
+        user.id,
+        personaType,
+        msg,
+        false,
+      );
+      // Send the response back to the user via WhatsApp
+      await this.sendWhatsAppMessage(message.from, msg);
+    }
 
     return {
       status: 'success',
-      message: aiResponse,
+      message: aiResponse.message,
     };
   }
 }
