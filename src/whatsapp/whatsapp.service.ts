@@ -9,6 +9,7 @@ import {
   HumanMessage,
   AIMessage,
 } from '@langchain/core/messages';
+import { Message } from '@prisma/client';
 import axios from 'axios';
 
 @Injectable()
@@ -51,6 +52,34 @@ export class WhatsappService {
     );
   }
 
+  private async generateAIResponse(
+    userMessage: string,
+    personaType: AiPersonaType,
+    history: Message[],
+  ): Promise<string> {
+    // Get system prompt for the persona
+    const systemPrompt = this.aiPersonasService.getSystemPrompt(personaType);
+    const systemMessage = new SystemMessage(systemPrompt);
+
+    // Convert history to LangChain messages
+    const chatHistory = history.map((msg) =>
+      msg.fromUser
+        ? new HumanMessage({ content: String(msg.message) })
+        : new AIMessage({ content: String(msg.message) }),
+    );
+
+    // Get AI response using LangChain
+    const aiResponse = await this.llmService.chatWithOpenAI(
+      userMessage,
+      process.env.OPENAI_API_KEY,
+      process.env.OPENAI_MODEL,
+      systemMessage,
+      chatHistory,
+    );
+
+    return aiResponse;
+  }
+
   async handleIncomingMessage(
     payload: WhatsappWebhookPayload,
     personaType: AiPersonaType,
@@ -71,31 +100,29 @@ export class WhatsappService {
     );
 
     // Save user message
-    void this.userService.saveConversation(
+    await this.userService.saveConversation(
       user.id,
       personaType,
       message.body,
       true,
     );
 
-    // Get system prompt for the persona
-    const systemPrompt = this.aiPersonasService.getSystemPrompt(personaType);
-    const systemMessage = new SystemMessage(systemPrompt);
+    // Wait for 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // Convert history to LangChain messages
-    const chatHistory = history.map((msg) =>
-      msg.fromUser
-        ? new HumanMessage({ content: msg.message as string })
-        : new AIMessage({ content: msg.message as string }),
+    const newMessages = await this.userService.getLatestMessages(
+      user.id,
+      personaType,
+      1,
     );
 
-    // Get AI response using LangChain
-    const aiResponse = await this.llmService.chatWithOpenAI(
+    if (newMessages.length !== 0) return { status: 'success' };
+
+    // Generate AI response
+    const aiResponse = await this.generateAIResponse(
       message.body,
-      process.env.OPENAI_API_KEY,
-      process.env.OPENAI_MODEL,
-      systemMessage,
-      chatHistory,
+      personaType,
+      history,
     );
 
     // Save AI response
@@ -108,28 +135,6 @@ export class WhatsappService {
 
     // Send the response back to the user via WhatsApp
     void this.sendWhatsAppMessage(message.from, aiResponse);
-
-    // Wait for 5 seconds
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    // Check if any new messages arrived during the wait
-    const newMessages = await this.userService.getLatestMessages(
-      user.id,
-      personaType,
-      1,
-    );
-
-    if (
-      newMessages.length > 0 &&
-      newMessages[0].fromUser &&
-      newMessages[0].timestamp > new Date(message.timestamp)
-    ) {
-      this.logger.log('New message received during wait period, terminating');
-      return {
-        status: 'terminated',
-        message: 'New message received, terminating previous response',
-      };
-    }
 
     return {
       status: 'success',
