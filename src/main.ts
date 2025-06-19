@@ -11,6 +11,7 @@ async function bootstrap() {
       'http://localhost:8081',
       'http://localhost:3000',
       'http://localhost:5173',
+      'https://gurukul-v1-frontend.vercel.app',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
