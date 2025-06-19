@@ -53,13 +53,16 @@ export class TrainingDataService {
             usedPath = tryPath;
             break;
           }
-        } catch (err) {
+        } catch {
           // Continue to next path
         }
       }
 
       if (priyaData) {
-        this.priyaTrainingData = JSON.parse(priyaData);
+        this.priyaTrainingData = JSON.parse(priyaData) as Record<
+          string,
+          { input: string; output: string | string[] }[]
+        >;
         this.logger.log(
           `Successfully loaded Priya training data from: ${usedPath}`,
         );
@@ -529,11 +532,12 @@ export class TrainingDataService {
     }> = [];
 
     // Get all training patterns for the persona
-    const allPatterns = this.getAllTrainingPatterns(personaType);
+    const allPatterns: TrainingPattern[] =
+      this.getAllTrainingPatterns(personaType);
 
     // Score each pattern based on relevance to user input
-    allPatterns.forEach((trainingPattern) => {
-      trainingPattern.patterns.forEach((pattern) => {
+    allPatterns.forEach((trainingPattern: TrainingPattern) => {
+      trainingPattern.patterns.forEach((pattern: ConversationExample) => {
         const score = this.calculateRelevanceScore(userInput, pattern.input);
         if (score > 0.1) {
           // Only include if somewhat relevant
@@ -559,13 +563,13 @@ export class TrainingDataService {
    */
   private calculateRelevanceScore(
     userInput: string,
-    patternInput: string,
+    patternInput: string | undefined,
   ): number {
     const userWords = userInput.toLowerCase().split(/\s+/);
-    const patternWords = patternInput.toLowerCase().split(/\s+/);
+    const patternWords = patternInput?.toLowerCase().split(/\s+/) || [];
 
     let matches = 0;
-    let totalWords = userWords.length;
+    const totalWords = userWords.length;
 
     // Count word matches
     userWords.forEach((word) => {
