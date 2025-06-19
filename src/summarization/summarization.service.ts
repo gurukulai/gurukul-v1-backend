@@ -10,7 +10,9 @@ export class SummarizationService {
 
   async summarizeConversation(messages: Message[]): Promise<string> {
     const conversationText = messages
-      .map((msg) => (msg.fromUser ? `User: ${msg.message}` : `Priya: ${msg.message}`))
+      .map((msg) =>
+        msg.fromUser ? `User: ${msg.message}` : `Priya: ${msg.message}`,
+      )
       .join('\\n');
 
     const prompt = `Please summarize the following conversation. The summary should be concise and capture the key points of the conversation. It will be used to provide context to an AI assistant in future conversations, so it should be dense with information. Focus on the user's needs, preferences, and the overall emotional tone of the conversation.
@@ -34,4 +36,4 @@ Summary:`;
       throw new Error('Could not generate conversation summary.');
     }
   }
-} 
+}

@@ -7,4 +7,4 @@ import { LlmModule } from '../llm/llm.module';
   providers: [SummarizationService],
   exports: [SummarizationService],
 })
-export class SummarizationModule {} 
+export class SummarizationModule {}

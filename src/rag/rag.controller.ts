@@ -138,7 +138,7 @@ export class RagController {
   }
 
   @Get('health')
-  async healthCheck() {
+  healthCheck() {
     return {
       success: true,
       status: 'healthy',

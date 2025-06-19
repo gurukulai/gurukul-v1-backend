@@ -6,7 +6,6 @@ import {
 } from '../ai-personas/interfaces/ai-persona.interface';
 import { WhatsappWebhookPayload } from './interfaces/whatsapp.interface';
 import { UserService } from '../user/user.service';
-// import { LlmService } from '../llm/llm.service'; // Commented out as it's not currently used
 import axios from 'axios';
 
 @Injectable()
@@ -19,7 +18,6 @@ export class WhatsappService {
     // private readonly prisma: PrismaService,
     private readonly aiPersonasService: AiPersonasService,
     private readonly userService: UserService,
-    // private readonly llmService: LlmService, // Commented out as it's not currently used
   ) {
     if (!this.PHONE_NUMBER_ID || !this.ACCESS_TOKEN) {
       throw new Error(
@@ -86,16 +84,14 @@ export class WhatsappService {
       ? aiResponse.message
       : [aiResponse.message];
 
-    for (const msg of messages) {
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i] as string;
       // Save AI response
       await this.userService.saveConversation(user.id, personaType, msg, false);
       // Send the response back to the user via WhatsApp
       await this.sendWhatsAppMessage(message.from, msg);
     }
 
-    return {
-      status: 'success',
-      message: aiResponse.message,
-    };
+    return { status: 'success' };
   }
 }

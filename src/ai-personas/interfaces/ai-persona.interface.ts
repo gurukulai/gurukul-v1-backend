@@ -15,7 +15,14 @@ export interface AiPersonaConfig {
 }
 
 export interface ConversationStyle {
-  tone: 'formal' | 'casual' | 'warm' | 'professional' | 'friendly' | 'flirty' | 'romantic';
+  tone:
+    | 'formal'
+    | 'casual'
+    | 'warm'
+    | 'professional'
+    | 'friendly'
+    | 'flirty'
+    | 'romantic';
   responseLength: 'brief' | 'moderate' | 'detailed';
   empathyLevel: number;
   directness: number;

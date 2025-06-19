@@ -10,6 +10,8 @@ async function bootstrap() {
       'http://localhost:8080',
       'http://localhost:8081',
       'http://localhost:3000',
+      'http://localhost:5173',
+      'https://gurukul-v1-frontend.vercel.app',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -21,6 +23,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(process.env.PORT ?? 8080);
+  await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();

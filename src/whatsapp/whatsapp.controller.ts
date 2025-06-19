@@ -63,11 +63,7 @@ export class WhatsappController {
       personaType,
     );
 
-    if (response.status === 'terminated') {
-      throw new HttpException(response.message || 'Service terminated', HttpStatus.GONE);
-    }
-
-    return response;
+    return response.status;
   }
 
   @Get(':personaType/webhook')
