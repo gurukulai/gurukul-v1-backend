@@ -1,3 +1,5 @@
+# 🎓 Gurukul Backend
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
@@ -5,8 +7,8 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
+<p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+<p align="center">
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
@@ -14,85 +16,225 @@
 <a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
 <a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
 <a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+<a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+<a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## 📖 Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Gurukul Backend is an intelligent educational platform built with [NestJS](https://github.com/nestjs/nest) that provides AI-powered learning experiences. The platform features:
 
-## Project setup
+- 🤖 **AI Personas**: Custom AI personalities including Priya, an intelligent learning assistant
+- 💬 **WhatsApp Integration**: Seamless communication through WhatsApp
+- 📝 **Conversation Summarization**: Smart summarization of learning conversations
+- 🔍 **RAG (Retrieval-Augmented Generation)**: Enhanced AI responses with context retrieval
+- 👤 **User Management**: Complete user authentication and profile management
+- 🧠 **LLM Integration**: Advanced language model capabilities
 
-```bash
-$ npm install
+## 🏗️ Project Structure
+
+```
+src/
+├── ai-personas/          # AI personality configurations
+│   ├── config/           # Persona settings
+│   └── training-data/    # Training examples
+├── whatsapp/             # WhatsApp integration
+├── summarization/        # Conversation summarization
+├── rag/                  # Retrieval-Augmented Generation
+├── llm/                  # Language model services
+├── user/                 # User management
+├── services/             # Shared services
+└── prisma/               # Database schema and migrations
 ```
 
-## Compile and run the project
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- PostgreSQL database
+- Supabase account (for vector storage)
+
+### Installation
 
 ```bash
-# development
-$ npm run start
+# Clone the repository
+git clone https://github.com/gurukulai/gurukul-v1-backend.git
+cd gurukul-v1-backend
 
-# watch mode
-$ npm run start:dev
+# Install dependencies
+npm install
 
-# production mode
-$ npm run start:prod
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-## Run tests
+### Environment Configuration
+
+Create a `.env` file with the following variables:
+
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/gurukul"
+
+# OpenAI
+OPENAI_API_KEY="your-openai-api-key"
+
+# Supabase
+SUPABASE_URL="your-supabase-url"
+SUPABASE_ANON_KEY="your-supabase-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-role-key"
+
+# WhatsApp (if using)
+WHATSAPP_API_KEY="your-whatsapp-api-key"
+```
+
+### Database Setup
 
 ```bash
-# unit tests
-$ npm run test
+# Generate Prisma client
+npx prisma generate
 
-# e2e tests
-$ npm run test:e2e
+# Run migrations
+npx prisma migrate dev
 
-# test coverage
-$ npm run test:cov
+# Seed database (if applicable)
+npx prisma db seed
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 🏃‍♂️ Running the Application
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Development mode
+npm run start:dev
+
+# Production mode
+npm run start:prod
+
+# Debug mode
+npm run start:debug
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The application will be available at `http://localhost:3000`
 
-## Resources
+## 🧪 Testing
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+# Unit tests
+npm run test
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# E2E tests
+npm run test:e2e
 
-## Support
+# Test coverage
+npm run test:cov
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Watch mode
+npm run test:watch
+```
 
-## Stay in touch
+## 🔧 Development
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Code Quality
 
-## License
+```bash
+# Lint code
+npm run lint
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Format code
+npm run format
+
+# Type checking
+npx tsc --noEmit
+```
+
+### Git Hooks
+
+The project uses Husky for pre-commit hooks that automatically:
+
+- Format code with Prettier
+- Run linting checks
+
+## 📚 Key Features
+
+### AI Personas
+
+- **Priya**: Intelligent learning assistant with natural conversation abilities
+- Customizable personality traits and responses
+- Context-aware conversations with 50-message history
+- Training data optimization for natural interactions
+
+### WhatsApp Integration
+
+- Seamless messaging through WhatsApp Business API
+- Message persistence and conversation tracking
+- Automated responses with AI personas
+
+### Conversation Management
+
+- Smart summarization of long conversations
+- Context preservation across sessions
+- Enhanced response quality through RAG
+
+## 🤝 Contributing
+
+Please read our [Collaboration Guide](./COLLABORATION_GUIDE.md) for detailed information on:
+
+- Setting up the development environment
+- Code standards and conventions
+- Git workflow and branching strategy
+- Troubleshooting common issues
+
+### Quick Setup for Contributors
+
+```bash
+# Automated setup (recommended)
+curl -O https://raw.githubusercontent.com/gurukulai/gurukul-v1-backend/main/collaborator_setup.sh
+chmod +x collaborator_setup.sh
+./collaborator_setup.sh
+```
+
+## 📖 Documentation
+
+- [Improving Priya AI](./IMPROVING_PRIYA.md) - Recent AI improvements and optimizations
+- [Collaboration Guide](./COLLABORATION_GUIDE.md) - Development workflow and guidelines
+- [API Documentation](./docs/api.md) - API endpoints and usage (if available)
+
+## 🚀 Deployment
+
+### Vercel Deployment
+
+The project includes `vercel.json` configuration for easy deployment on Vercel:
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Other Platforms
+
+For other deployment options, check out the [NestJS deployment documentation](https://docs.nestjs.com/deployment).
+
+## 📄 License
+
+This project is [MIT licensed](LICENSE).
+
+## 🆘 Support
+
+- 📖 [NestJS Documentation](https://docs.nestjs.com)
+- 💬 [Discord Community](https://discord.gg/G7Qnnhy)
+- 🐛 [GitHub Issues](https://github.com/gurukulai/gurukul-v1-backend/issues)
+
+## 🔗 Related Projects
+
+- [Gurukul Frontend](https://github.com/raghavg93/gurukul-v1-frontend) - React-based chat interface
+
+---
+
+Built with ❤️ using [NestJS](https://nestjs.com/)

@@ -2,28 +2,58 @@
 
 ## 🎯 **Overview**
 
-This enhanced RAG system provides intelligent document search and retrieval capabilities integrated with your AI personas. It uses **Supabase** for vector storage and **OpenAI** for embeddings and response generation.
+This enhanced RAG system provides intelligent document search and retrieval capabilities integrated with your AI personas. It uses **Supabase** for vector storage, **OpenAI** for embeddings and response generation, and **LangChain.js** for advanced AI workflows and conversation management.
 
 ## 🚀 **Features**
 
 ### **Core Capabilities**
 
-- ✅ **Document Processing**: Smart chunking with overlap
-- ✅ **Vector Search**: Semantic similarity using OpenAI embeddings
+- ✅ **Document Processing**: Smart chunking with overlap using LangChain text splitters
+- ✅ **Vector Search**: Semantic similarity using OpenAI embeddings via LangChain
 - ✅ **Multi-format Support**: Text, Markdown, HTML, PDF, URLs
 - ✅ **Persona Integration**: Context-aware responses for each AI persona
-- ✅ **WhatsApp Integration**: Automatic RAG triggering for relevant queries
+- ✅ **WhatsApp Integration**: Automatic RAG triggering with LangChain optimization
 - ✅ **Metadata Filtering**: Search by category, document type, persona
 - ✅ **Batch Processing**: Efficient bulk document uploads
 - ✅ **Analytics**: Document statistics and usage tracking
 
 ### **Advanced Features**
 
-- 🧠 **Smart Chunking**: Paragraph, sentence, or token-based splitting
+- 🧠 **Smart Chunking**: Paragraph, sentence, or token-based splitting with LangChain
 - 🎯 **Confidence Scoring**: Response quality assessment
 - 📊 **Source Attribution**: Track document sources in responses
 - 🔄 **Continuous Learning**: Add conversations to knowledge base
-- 🎨 **WhatsApp Formatting**: Optimized responses for messaging
+- 🎨 **WhatsApp Formatting**: Optimized responses using LangChain ChatOpenAI
+- 💬 **Conversation Memory**: Persistent context using LangChain BufferMemory
+- 🔗 **Chain Composition**: Complex workflows with ConversationChain and LLMChain
+- 📝 **Structured Output**: JSON parsing with StringOutputParser
+- 🗄️ **Vector Store**: Enhanced retrieval with MemoryVectorStore
+- 🎭 **Prompt Templates**: Consistent formatting with PromptTemplate
+
+### **LangChain.js Integrations**
+
+#### **1. Document Processing**
+
+- **Text Splitters**: `RecursiveCharacterTextSplitter` for intelligent document chunking
+- **Document Management**: LangChain's `Document` class for structured handling
+- **Embeddings**: OpenAI embeddings via `@langchain/openai`
+
+#### **2. Chat and Response Generation**
+
+- **ChatOpenAI**: Primary LLM for response generation and optimization
+- **SystemMessage/HumanMessage**: Structured prompt management
+- **Response Optimization**: WhatsApp-specific formatting using LangChain chains
+
+#### **3. Advanced Features (via `langchain-enhancements.util.ts`)**
+
+- **Conversation Memory**: Persistent context using `BufferMemory`
+- **Chain Composition**: Complex workflows with `ConversationChain` and `LLMChain`
+- **Structured Output**: JSON parsing with `StringOutputParser`
+- **Vector Store**: In-memory vector store for enhanced retrieval
+- **Prompt Templates**: Consistent formatting with `PromptTemplate`
+- **Multi-step Reasoning**: Step-by-step problem solving chains
+- **Follow-up Questions**: AI-generated relevant questions
+- **Conversation Summarization**: Automatic summary generation
 
 ## 🛠️ **Setup Instructions**
 
@@ -63,8 +93,9 @@ Execute the SQL schema in your Supabase SQL editor:
 The required packages are already in `package.json`:
 
 - `@supabase/supabase-js` - Supabase client
-- `@langchain/openai` - OpenAI embeddings
-- `langchain` - Document processing
+- `@langchain/openai` - OpenAI embeddings and chat
+- `langchain` - Document processing and chains
+- `@langchain/core` - Core LangChain components
 
 ## 📚 **API Endpoints**
 
@@ -150,9 +181,9 @@ GET /rag/health
 
 ## 🔧 **Integration Examples**
 
-### **1. WhatsApp Integration**
+### **1. WhatsApp Integration with LangChain**
 
-The RAG system automatically integrates with WhatsApp messages:
+The RAG system automatically integrates with WhatsApp messages using LangChain optimizations:
 
 ```typescript
 // In your WhatsApp service
@@ -166,12 +197,44 @@ const ragResult = await this.ragIntegration.processWhatsAppMessage(
 );
 
 if (ragResult.shouldUseRAG) {
-  // Use RAG response instead of regular AI response
+  // Use LangChain-optimized RAG response
   return ragResult.ragResponse;
 }
 ```
 
-### **2. Add Documents Programmatically**
+### **2. Advanced LangChain Features**
+
+```typescript
+// Create conversation chain with memory
+const chain = await langchainEnhancements.createConversationChain(
+  userId,
+  'PRIYA',
+  systemPrompt,
+);
+
+// Generate follow-up questions
+const questions = await langchainEnhancements.generateFollowUpQuestions(
+  userQuery,
+  ragResponse,
+  context,
+);
+
+// Create structured response
+const structuredResponse =
+  await langchainEnhancements.createStructuredRAGResponse(
+    query,
+    sources,
+    personaType,
+  );
+
+// Multi-step reasoning
+const reasoning = await langchainEnhancements.createReasoningChain(
+  query,
+  context,
+);
+```
+
+### **3. Add Documents Programmatically**
 
 ```typescript
 // Add therapy-related documents
@@ -199,22 +262,108 @@ await this.ragService.addDocument(
 );
 ```
 
-### **3. Bulk Document Upload**
+## 🏗️ **Architecture**
 
-```typescript
-const documents = [
-  {
-    content: 'Document 1 content...',
-    metadata: { personaType: 'THERAPIST', category: 'wellness' },
-  },
-  {
-    content: 'Document 2 content...',
-    metadata: { personaType: 'CAREER', category: 'job-search' },
-  },
-];
-
-const documentIds = await this.ragService.addDocuments(documents);
 ```
+WhatsApp Message → RAG Trigger Detection → Document Search → Response Generation → WhatsApp Formatting
+                                      ↓
+                              LangChain Integration
+                                      ↓
+                              Memory Management
+                                      ↓
+                              Vector Store Search
+                                      ↓
+                              Structured Output
+```
+
+## 🔄 **LangChain.js Workflow**
+
+### **1. Document Processing**
+
+```
+Raw Document → LangChain Text Splitter → Chunks → OpenAI Embeddings → Vector Store
+```
+
+### **2. Query Processing**
+
+```
+User Query → LangChain Query Enhancement → Vector Search → Context Retrieval → Response Generation
+```
+
+### **3. Response Optimization**
+
+```
+RAG Response → LangChain ChatOpenAI → WhatsApp Formatting → Structured Output → User
+```
+
+## 📊 **Improvements Made**
+
+### **TypeScript Enhancements**
+
+- ✅ Replaced all `any` types with proper interfaces
+- ✅ Added comprehensive type definitions
+- ✅ Proper error handling with typed responses
+- ✅ Interface definitions for all data structures
+
+### **LangChain.js Integration**
+
+- ✅ ChatOpenAI for response generation
+- ✅ SystemMessage/HumanMessage for structured prompts
+- ✅ Document processing with LangChain splitters
+- ✅ Embeddings via LangChain OpenAI
+- ✅ Memory management for conversation context
+- ✅ Chain composition for complex workflows
+- ✅ Vector store integration
+- ✅ Prompt templates for consistency
+
+### **Error Handling**
+
+- ✅ Graceful fallbacks for LangChain operations
+- ✅ Comprehensive error logging
+- ✅ Type-safe error responses
+- ✅ Robust metadata parsing
+
+### **Performance Optimizations**
+
+- ✅ Efficient document chunking
+- ✅ Optimized search queries
+- ✅ WhatsApp-specific response formatting
+- ✅ Memory management for long conversations
+
+## 🚀 **Future Enhancements**
+
+### **Planned LangChain Integrations**
+
+1. **Agents**: Multi-step reasoning with tool usage
+2. **Callbacks**: Detailed logging and monitoring
+3. **Retrievers**: Advanced document retrieval strategies
+4. **Evaluators**: Response quality assessment
+5. **Tools**: External API integrations
+
+### **Advanced Features**
+
+1. **Multi-modal Support**: Image and document processing
+2. **Real-time Learning**: Continuous model improvement
+3. **A/B Testing**: Response optimization
+4. **Analytics Dashboard**: Usage insights and metrics
+
+## 🧪 **Testing**
+
+Run the RAG system tests:
+
+```bash
+npm run test:rag
+```
+
+## 📝 **Contributing**
+
+When adding new LangChain integrations:
+
+1. Follow the existing pattern in `langchain-enhancements.util.ts`
+2. Add proper TypeScript interfaces
+3. Include comprehensive error handling
+4. Add unit tests for new functionality
+5. Update this README with new features
 
 ## 🎨 **WhatsApp RAG Triggers**
 
