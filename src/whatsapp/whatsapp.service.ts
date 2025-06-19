@@ -1,9 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiPersonasService } from '../ai-personas/ai-personas.service';
-import { AiPersonaType, AiPersonaContext } from '../ai-personas/interfaces/ai-persona.interface';
+import {
+  AiPersonaType,
+  AiPersonaContext,
+} from '../ai-personas/interfaces/ai-persona.interface';
 import { WhatsappWebhookPayload } from './interfaces/whatsapp.interface';
 import { UserService } from '../user/user.service';
-import { LlmService } from '../llm/llm.service';
+// import { LlmService } from '../llm/llm.service'; // Commented out as it's not currently used
 import axios from 'axios';
 
 @Injectable()
@@ -16,7 +19,7 @@ export class WhatsappService {
     // private readonly prisma: PrismaService,
     private readonly aiPersonasService: AiPersonasService,
     private readonly userService: UserService,
-    private readonly llmService: LlmService,
+    // private readonly llmService: LlmService, // Commented out as it's not currently used
   ) {
     if (!this.PHONE_NUMBER_ID || !this.ACCESS_TOKEN) {
       throw new Error(
@@ -85,12 +88,7 @@ export class WhatsappService {
 
     for (const msg of messages) {
       // Save AI response
-      await this.userService.saveConversation(
-        user.id,
-        personaType,
-        msg,
-        false,
-      );
+      await this.userService.saveConversation(user.id, personaType, msg, false);
       // Send the response back to the user via WhatsApp
       await this.sendWhatsAppMessage(message.from, msg);
     }
