@@ -136,9 +136,6 @@ export class WhatsappService {
     // Send the response back to the user via WhatsApp
     void this.sendWhatsAppMessage(message.from, aiResponse);
 
-    return {
-      status: 'success',
-      message: aiResponse,
-    };
+    return { status: 'success' };
   }
 }
