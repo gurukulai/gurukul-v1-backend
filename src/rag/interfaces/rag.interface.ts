@@ -7,6 +7,8 @@ export interface DocumentMetadata {
   createdAt?: Date;
   updatedAt?: Date;
   personaType?: string; // Link to specific personas if needed
+  persona?: string; // Used for persona-specific filtering
+  persona_specific?: boolean; // Flag to indicate persona-specific documents
   documentType: DocumentType;
   chunkIndex?: number;
   totalChunks?: number;

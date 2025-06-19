@@ -14,7 +14,12 @@ async function bootstrap() {
       'https://gurukul-v1-frontend.vercel.app',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Cache-Control',
+      'Pragma',
+    ],
     credentials: true,
   });
 
