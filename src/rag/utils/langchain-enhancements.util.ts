@@ -12,11 +12,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChatOpenAI } from '@langchain/openai';
-import {
-  SystemMessage,
-  HumanMessage,
-  AIMessage,
-} from '@langchain/core/messages';
 import { ConversationChain, LLMChain } from 'langchain/chains';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { BufferMemory } from 'langchain/memory';

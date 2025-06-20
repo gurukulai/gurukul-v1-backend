@@ -14,11 +14,11 @@ export class LlmService {
   // Example for OpenAI GPT-3/4 API
   async chatWithOpenAI(
     prompt: string,
-    apiKey: string | undefined = process.env.OPENAI_API_KEY,
-    model: string | undefined = process.env.OPENAI_MODEL,
     SystemMessage?: SystemMessage,
     chatHistory?: Array<HumanMessage | AIMessage>,
+    model: string | undefined = process.env.OPENAI_MODEL,
   ): Promise<string> {
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error('OpenAI API key is required in .env file');
     if (!model) throw new Error('OpenAI model is required in .env file');
 

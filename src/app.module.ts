@@ -10,6 +10,7 @@ import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RagModule } from './rag/rag.module';
 import { SummarizationModule } from './summarization/summarization.module';
+import { PineconeModule } from './pinecone/pinecone.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SummarizationModule } from './summarization/summarization.module';
     PrismaModule,
     RagModule,
     SummarizationModule,
+    PineconeModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -66,46 +66,6 @@ export class RagService {
   }
 
   /**
-   * Add multiple documents efficiently
-   */
-  async addDocuments(
-    documents: Array<{
-      content: string;
-      metadata?: Partial<DocumentMetadata>;
-      options?: DocumentProcessingOptions;
-    }>,
-  ): Promise<string[]> {
-    this.logger.log(`Adding ${documents.length} documents to knowledge base`);
-
-    const allProcessedDocs: ProcessedDocument[] = [];
-
-    // Process all documents
-    for (const doc of documents) {
-      const chunks = await this.documentProcessor.processDocument(
-        doc.content,
-        doc.metadata || {},
-        doc.options || {},
-      );
-
-      const processedDocs: ProcessedDocument[] = chunks.map((chunk) => ({
-        content: chunk.content,
-        metadata: chunk.metadata,
-      }));
-
-      allProcessedDocs.push(...processedDocs);
-    }
-
-    // Store all documents
-    const documentIds =
-      await this.embeddingsManager.storeDocuments(allProcessedDocs);
-
-    this.logger.log(
-      `Added ${String(documentIds.length)} total document chunks`,
-    );
-    return documentIds;
-  }
-
-  /**
    * Search for similar documents
    */
   async searchSimilarDocuments(
@@ -128,7 +88,7 @@ export class RagService {
    */
   async generateRAGResponse(
     query: string,
-    personaType?: AiPersonaType,
+    personaType: AiPersonaType,
     searchOptions: SearchOptions = {},
   ): Promise<RAGResponse> {
     try {
@@ -160,16 +120,12 @@ export class RagService {
         )
         .join('\n\n');
 
-      // Generate response using LLM with persona
-      let systemPrompt = `You are a helpful assistant that answers questions based on the provided context. 
+      const personaSystemPrompt =
+        this.aiPersonasService.getSystemPrompt(personaType);
+
+      const systemPrompt = `${personaSystemPrompt}\n\nYou are a helpful assistant that answers questions based on the provided context. 
       Always cite your sources using [Source X] notation when referencing information from the context.
       If the context doesn't contain enough information to answer the question, say so clearly.`;
-
-      if (personaType) {
-        const personaSystemPrompt =
-          this.aiPersonasService.getSystemPrompt(personaType);
-        systemPrompt = `${personaSystemPrompt}\n\n${systemPrompt}`;
-      }
 
       const response = await this.llmService.chatWithOpenAI(
         `Context:\n${context}\n\nQuestion: ${query}`,

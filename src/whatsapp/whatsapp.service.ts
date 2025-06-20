@@ -85,10 +85,8 @@ export class WhatsappService {
       : [aiResponse.message];
 
     for (let i = 0; i < messages.length; i++) {
-      const msg = messages[i] as string;
-      // Save AI response
+      const msg = messages[i];
       await this.userService.saveConversation(user.id, personaType, msg, false);
-      // Send the response back to the user via WhatsApp
       await this.sendWhatsAppMessage(message.from, msg);
     }
 
