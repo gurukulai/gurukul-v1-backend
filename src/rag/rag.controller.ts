@@ -42,22 +42,6 @@ export class RagController {
     return { success: true, documentIds: result };
   }
 
-  @Post('documents')
-  async addDocuments(
-    @Body()
-    body: {
-      documents: Array<{
-        content: string;
-        metadata?: Partial<DocumentMetadata>;
-        options?: DocumentProcessingOptions;
-      }>;
-    },
-  ) {
-    this.logger.log(`Adding ${body.documents.length} documents`);
-    const result = await this.ragService.addDocuments(body.documents);
-    return { success: true, documentIds: result };
-  }
-
   @Get('search')
   async searchDocuments(
     @Query('query') query: string,
@@ -135,16 +119,6 @@ export class RagController {
     this.logger.log('Getting document statistics');
     const stats = await this.ragService.getDocumentStats();
     return { success: true, stats };
-  }
-
-  @Get('health')
-  healthCheck() {
-    return {
-      success: true,
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      service: 'RAG Service',
-    };
   }
 
   @Get('debug/documents')
