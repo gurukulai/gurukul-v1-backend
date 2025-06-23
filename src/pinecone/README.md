@@ -428,6 +428,245 @@ async searchUserDocuments(userId: string, query: string) {
 }
 ```
 
+## Expert Classes in Pinecone
+
+The Pinecone module implements a sophisticated expert system where each expert is treated as a separate **class** within Pinecone. This design allows for specialized knowledge domains with isolated vector spaces.
+
+### Expert Class Architecture
+
+Each expert in the system:
+
+- **Has its own namespace** in Pinecone (e.g., `expert-{uuid}`)
+- **Contains specialized knowledge** through vector embeddings
+- **Maintains metadata** about its domain and training status
+- **Can be activated/deactivated** independently
+
+### Creating Expert Classes
+
+```typescript
+import { ExpertsService } from './pinecone/experts.service';
+
+@Injectable()
+export class ExpertManagementService {
+  constructor(private readonly expertsService: ExpertsService) {}
+
+  async createExpertClass(name: string, description: string) {
+    const expert = this.expertsService.createExpert({
+      name: 'Machine Learning Expert',
+      description: 'Specialized in ML algorithms and neural networks',
+    });
+
+    return {
+      expertId: expert.id,
+      namespace: expert.namespace,
+      message: `Expert class "${expert.name}" created successfully`,
+    };
+  }
+}
+```
+
+### Training Expert Classes
+
+```typescript
+import { DocumentsService } from './pinecone/documents.service';
+
+@Injectable()
+export class ExpertTrainingService {
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly expertsService: ExpertsService,
+  ) {}
+
+  async trainExpertClass(
+    expertId: string,
+    documents: Array<{
+      title: string;
+      content: string;
+      metadata?: Record<string, unknown>;
+    }>,
+  ) {
+    const expert = this.expertsService.getExpert(expertId);
+    if (!expert) {
+      throw new Error(`Expert class ${expertId} not found`);
+    }
+
+    const results = [];
+    for (const doc of documents) {
+      const result = await this.documentsService.uploadDocument({
+        expertId,
+        title: doc.title,
+        content: doc.content,
+        metadata: doc.metadata,
+      });
+      results.push(result);
+    }
+
+    return {
+      expertName: expert.name,
+      documentsProcessed: results.length,
+      totalChunksCreated: results.reduce((sum, r) => sum + r.chunksCreated, 0),
+      message: `Expert class "${expert.name}" trained with ${results.length} documents`,
+    };
+  }
+}
+```
+
+### Querying Expert Classes
+
+```typescript
+import { QueryService } from './pinecone/query.service';
+
+@Injectable()
+export class ExpertQueryService {
+  constructor(private readonly queryService: QueryService) {}
+
+  async askExpert(expertId: string, question: string) {
+    const response = await this.queryService.queryExpert(expertId, question, {
+      topK: 5,
+    });
+
+    return {
+      expert: response.expert,
+      answer: response.results.map((r) => r.content).join('\n\n'),
+      confidence: response.results[0]?.similarity || 0,
+      reasoning: response.reasoning,
+    };
+  }
+
+  async compareExperts(expertIds: string[], question: string) {
+    const responses = await Promise.all(
+      expertIds.map((id) => this.askExpert(id, question)),
+    );
+
+    return responses.map((response) => ({
+      expert: response.expert,
+      answer: response.answer,
+      confidence: response.confidence,
+    }));
+  }
+}
+```
+
+### Managing Expert Classes
+
+```typescript
+@Injectable()
+export class ExpertAdminService {
+  constructor(private readonly expertsService: ExpertsService) {}
+
+  // Get all active expert classes
+  async getActiveExperts() {
+    return this.expertsService.getActiveExperts();
+  }
+
+  // Deactivate an expert class
+  async deactivateExpert(expertId: string) {
+    this.expertsService.deactivateExpert(expertId);
+    return { message: 'Expert class deactivated successfully' };
+  }
+
+  // Reactivate an expert class
+  async reactivateExpert(expertId: string) {
+    this.expertsService.reactivateExpert(expertId);
+    return { message: 'Expert class reactivated successfully' };
+  }
+
+  // Get expert class statistics
+  async getExpertStats(expertId: string) {
+    const expert = this.expertsService.getExpert(expertId);
+    if (!expert) {
+      throw new Error(`Expert class ${expertId} not found`);
+    }
+
+    return {
+      id: expert.id,
+      name: expert.name,
+      description: expert.description,
+      namespace: expert.namespace,
+      vectorCount: expert.vectorCount || 0,
+      lastTrained: expert.lastTrained,
+      isActive: expert.isActive,
+      createdAt: expert.createdAt,
+      updatedAt: expert.updatedAt,
+    };
+  }
+}
+```
+
+### Expert Class API Endpoints
+
+#### Create Expert Class
+
+```http
+POST /pinecone/experts
+Content-Type: application/json
+
+{
+  "name": "Machine Learning Expert",
+  "description": "Specialized in ML algorithms and neural networks"
+}
+```
+
+#### Train Expert Class
+
+```http
+POST /pinecone/experts/{expertId}/train
+Content-Type: application/json
+
+{
+  "documents": [
+    {
+      "title": "Introduction to Neural Networks",
+      "content": "Neural networks are computational models...",
+      "metadata": { "category": "neural-networks", "difficulty": "beginner" }
+    }
+  ]
+}
+```
+
+#### Query Expert Class
+
+```http
+POST /pinecone/experts/{expertId}/query
+Content-Type: application/json
+
+{
+  "query": "What is backpropagation?",
+  "options": {
+    "topK": 5,
+    "forceVector": false
+  }
+}
+```
+
+#### Get Expert Class Statistics
+
+```http
+GET /pinecone/experts/{expertId}/stats
+```
+
+#### Deactivate Expert Class
+
+```http
+PUT /pinecone/experts/{expertId}/deactivate
+```
+
+### Expert Class Use Cases
+
+1. **Domain-Specific Knowledge**: Each expert class can specialize in a specific domain (e.g., medicine, law, engineering)
+2. **Multi-Expert Systems**: Combine multiple expert classes for comprehensive answers
+3. **Expert Comparison**: Compare responses from different expert classes
+4. **Expert Evolution**: Update expert classes with new knowledge over time
+5. **Expert Isolation**: Keep sensitive or specialized knowledge separate
+
+### Best Practices for Expert Classes
+
+1. **Clear Naming**: Use descriptive names for expert classes
+2. **Focused Training**: Train each expert with domain-specific content
+3. **Regular Updates**: Keep expert classes updated with new information
+4. **Quality Control**: Monitor expert performance and accuracy
+5. **Namespace Management**: Use unique namespaces to avoid conflicts
+
 ## Contributing
 
 When contributing to this module:

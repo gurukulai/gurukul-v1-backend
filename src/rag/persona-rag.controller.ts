@@ -16,7 +16,7 @@ import {
   SearchOptions,
   DocumentType,
 } from './interfaces/rag.interface';
-import { AiPersonaType } from '../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../ai-personas/interfaces';
 
 @Controller('persona-rag')
 export class PersonaRagController {
@@ -26,7 +26,7 @@ export class PersonaRagController {
 
   @Post(':personaType/document')
   async addDocument(
-    @Param('personaType') personaType: AiPersonaType,
+    @Param('personaType') personaType: PersonaType,
     @Body()
     body: {
       content: string;
@@ -48,7 +48,7 @@ export class PersonaRagController {
 
   @Post(':personaType/documents')
   async addDocuments(
-    @Param('personaType') personaType: AiPersonaType,
+    @Param('personaType') personaType: PersonaType,
     @Body()
     body: {
       documents: Array<{
@@ -70,7 +70,7 @@ export class PersonaRagController {
 
   @Get(':personaType/search')
   async searchDocuments(
-    @Param('personaType') personaType: AiPersonaType,
+    @Param('personaType') personaType: PersonaType,
     @Query('query') query: string,
     @Query('limit') limit?: string,
     @Query('threshold') threshold?: string,
@@ -97,7 +97,7 @@ export class PersonaRagController {
 
   @Post(':personaType/query')
   async queryWithRAG(
-    @Param('personaType') personaType: AiPersonaType,
+    @Param('personaType') personaType: PersonaType,
     @Body()
     body: {
       query: string;
@@ -115,7 +115,7 @@ export class PersonaRagController {
 
   @Delete(':personaType/document/:documentId')
   async deleteDocument(
-    @Param('personaType') personaType: AiPersonaType,
+    @Param('personaType') personaType: PersonaType,
     @Param('documentId') documentId: string,
   ) {
     this.logger.log(`Deleting document ${documentId} from ${personaType}`);
@@ -125,7 +125,7 @@ export class PersonaRagController {
 
   @Put(':personaType/document/:documentId/metadata')
   async updateDocumentMetadata(
-    @Param('personaType') personaType: AiPersonaType,
+    @Param('personaType') personaType: PersonaType,
     @Param('documentId') documentId: string,
     @Body() body: { metadata: Partial<DocumentMetadata> },
   ) {
@@ -141,7 +141,7 @@ export class PersonaRagController {
   }
 
   @Get(':personaType/stats')
-  async getPersonaStats(@Param('personaType') personaType: AiPersonaType) {
+  async getPersonaStats(@Param('personaType') personaType: PersonaType) {
     this.logger.log(`Getting stats for ${personaType}`);
     const stats =
       await this.personaRagService.getPersonaDocumentStats(personaType);
@@ -163,9 +163,7 @@ export class PersonaRagController {
   }
 
   @Delete(':personaType/documents')
-  async clearPersonaDocuments(
-    @Param('personaType') personaType: AiPersonaType,
-  ) {
+  async clearPersonaDocuments(@Param('personaType') personaType: PersonaType) {
     this.logger.log(`Clearing all documents from ${personaType}`);
     const deletedCount =
       await this.personaRagService.clearPersonaDocuments(personaType);
@@ -173,9 +171,7 @@ export class PersonaRagController {
   }
 
   @Get(':personaType/debug/documents')
-  async debugPersonaDocuments(
-    @Param('personaType') personaType: AiPersonaType,
-  ) {
+  async debugPersonaDocuments(@Param('personaType') personaType: PersonaType) {
     try {
       this.logger.log(`Debug: Fetching raw documents for ${personaType}`);
       const result =
@@ -191,7 +187,7 @@ export class PersonaRagController {
   }
 
   @Get(':personaType/health')
-  async checkPersonaHealth(@Param('personaType') personaType: AiPersonaType) {
+  async checkPersonaHealth(@Param('personaType') personaType: PersonaType) {
     this.logger.log(`Health check for ${personaType}`);
     const hasDocuments =
       await this.personaRagService.hasPersonaDocuments(personaType);
@@ -211,20 +207,13 @@ export class PersonaRagController {
     };
   }
 
-  @Post('migrate')
-  async migrateFromUnified() {
-    this.logger.log('Starting migration from unified database');
-    const result = await this.personaRagService.migrateFromUnifiedDatabase();
-    return { success: true, migration: result };
-  }
-
   // Legacy compatibility endpoints (for existing integrations)
   @Post('query')
   async legacyQuery(
     @Body()
     body: {
       query: string;
-      personaType?: AiPersonaType;
+      personaType?: PersonaType;
       searchOptions?: SearchOptions;
     },
   ) {
@@ -242,7 +231,7 @@ export class PersonaRagController {
   @Get('search')
   async legacySearch(
     @Query('query') query: string,
-    @Query('personaType') personaType?: AiPersonaType,
+    @Query('personaType') personaType?: PersonaType,
     @Query('limit') limit?: string,
     @Query('threshold') threshold?: string,
     @Query('category') category?: string,

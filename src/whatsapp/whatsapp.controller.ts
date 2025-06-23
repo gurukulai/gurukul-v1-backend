@@ -13,7 +13,7 @@ import {
 import { WhatsappService } from './whatsapp.service';
 import { WhatsappWebhookPayload } from './interfaces/whatsapp.interface';
 import * as crypto from 'crypto';
-import { AiPersonaType } from 'src/ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from 'src/ai-personas/interfaces';
 
 @Controller('whatsapp')
 export class WhatsappController {
@@ -50,7 +50,7 @@ export class WhatsappController {
   async handleWebhook(
     @Body() payload: WhatsappWebhookPayload,
     @Headers('x-hub-signature-256') signature: string,
-    @Param('personaType') personaType: AiPersonaType,
+    @Param('personaType') personaType: PersonaType,
   ) {
     // Verify the request is from WhatsApp
     if (!this.verifyWhatsAppRequest(signature, payload)) {

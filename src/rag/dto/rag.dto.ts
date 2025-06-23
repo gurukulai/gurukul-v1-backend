@@ -4,7 +4,7 @@ import {
   SearchOptions,
   DocumentType,
 } from '../interfaces/rag.interface';
-import { AiPersonaType } from '../../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../../ai-personas/interfaces';
 
 export interface AddDocumentDto {
   content: string;
@@ -24,7 +24,7 @@ export interface SearchDocumentsDto {
   query: string;
   limit?: number;
   threshold?: number;
-  personaType?: AiPersonaType;
+  personaType?: PersonaType;
   category?: string;
   documentType?: DocumentType;
   includeMetadata?: boolean;
@@ -32,7 +32,7 @@ export interface SearchDocumentsDto {
 
 export interface RAGQueryDto {
   query: string;
-  personaType?: AiPersonaType;
+  personaType?: PersonaType;
   searchOptions?: SearchOptions;
 }
 

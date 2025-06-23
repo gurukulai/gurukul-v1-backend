@@ -9,7 +9,7 @@ import {
   DocumentMetadata,
   DocumentType,
 } from '../interfaces/rag.interface';
-import { AiPersonaType } from '../../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../../ai-personas/interfaces';
 
 interface SupabaseDocument {
   id: string;
@@ -46,7 +46,7 @@ export class PersonaEmbeddingsManager {
 
   // Persona-specific table configuration
   // For now, using the main documents table with persona filtering
-  private readonly PERSONA_CONFIG: Record<AiPersonaType, PersonaTableConfig> = {
+  private readonly PERSONA_CONFIG: Record<PersonaType, PersonaTableConfig> = {
     PRIYA: {
       tableName: 'documents',
       searchFunction: 'match_documents',
@@ -87,14 +87,14 @@ export class PersonaEmbeddingsManager {
   /**
    * Get table name for a specific persona
    */
-  private getPersonaTableName(personaType: AiPersonaType): string {
+  private getPersonaTableName(personaType: PersonaType): string {
     return this.PERSONA_CONFIG[personaType].tableName;
   }
 
   /**
    * Get search function name for a specific persona
    */
-  private getPersonaSearchFunction(personaType: AiPersonaType): string {
+  private getPersonaSearchFunction(personaType: PersonaType): string {
     return this.PERSONA_CONFIG[personaType].searchFunction;
   }
 
@@ -119,7 +119,7 @@ export class PersonaEmbeddingsManager {
    */
   async storeDocument(
     document: ProcessedDocument,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<string> {
     // Generate embedding if not provided
     if (!document.embedding) {
@@ -165,7 +165,7 @@ export class PersonaEmbeddingsManager {
    */
   async storeDocuments(
     documents: ProcessedDocument[],
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<string[]> {
     if (documents.length === 0) {
       return [];
@@ -215,7 +215,7 @@ export class PersonaEmbeddingsManager {
    */
   async searchSimilarDocuments(
     query: string,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     options: SearchOptions = {},
   ): Promise<SearchResult[]> {
     const {
@@ -308,7 +308,7 @@ export class PersonaEmbeddingsManager {
    */
   private async fallbackSimilaritySearch(
     queryEmbedding: number[],
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     options: SearchOptions = {},
   ): Promise<SearchResult[]> {
     const {
@@ -398,7 +398,7 @@ export class PersonaEmbeddingsManager {
    */
   async deleteDocument(
     documentId: string,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<void> {
     const tableName = this.getPersonaTableName(personaType);
 
@@ -423,7 +423,7 @@ export class PersonaEmbeddingsManager {
   async updateDocumentMetadata(
     documentId: string,
     metadata: Partial<DocumentMetadata>,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<void> {
     const tableName = this.getPersonaTableName(personaType);
 
@@ -472,7 +472,7 @@ export class PersonaEmbeddingsManager {
   /**
    * Get document statistics for a specific persona
    */
-  async getPersonaDocumentStats(personaType: AiPersonaType): Promise<{
+  async getPersonaDocumentStats(personaType: PersonaType): Promise<{
     totalDocuments: number;
     documentsByCategory: Record<string, number>;
     latestDocumentDate: string | null;
@@ -518,7 +518,7 @@ export class PersonaEmbeddingsManager {
    */
   async getAllPersonasStats(): Promise<
     Record<
-      AiPersonaType,
+      PersonaType,
       {
         totalDocuments: number;
         documentsByCategory: Record<string, number>;
@@ -530,7 +530,7 @@ export class PersonaEmbeddingsManager {
 
     for (const personaType of Object.keys(
       this.PERSONA_CONFIG,
-    ) as AiPersonaType[]) {
+    ) as PersonaType[]) {
       try {
         stats[personaType] = await this.getPersonaDocumentStats(personaType);
       } catch (error) {
@@ -549,7 +549,7 @@ export class PersonaEmbeddingsManager {
   /**
    * Clear all documents for a specific persona
    */
-  async clearPersonaDocuments(personaType: AiPersonaType): Promise<number> {
+  async clearPersonaDocuments(personaType: PersonaType): Promise<number> {
     const tableName = this.getPersonaTableName(personaType);
 
     const { count, error } = await this.supabase
@@ -572,7 +572,7 @@ export class PersonaEmbeddingsManager {
   /**
    * Debug method to get raw documents and check embeddings for a persona
    */
-  async debugGetPersonaDocuments(personaType: AiPersonaType) {
+  async debugGetPersonaDocuments(personaType: PersonaType) {
     const tableName = this.getPersonaTableName(personaType);
 
     try {

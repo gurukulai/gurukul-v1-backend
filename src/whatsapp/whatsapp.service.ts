@@ -1,9 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiPersonasService } from '../ai-personas/ai-personas.service';
-import {
-  AiPersonaType,
-  AiPersonaContext,
-} from '../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../ai-personas/interfaces';
 import { WhatsappWebhookPayload } from './interfaces/whatsapp.interface';
 import { UserService } from '../user/user.service';
 import axios from 'axios';
@@ -49,7 +46,7 @@ export class WhatsappService {
 
   async handleIncomingMessage(
     payload: WhatsappWebhookPayload,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ) {
     this.logger.log('Received WhatsApp message:', payload);
 
@@ -68,24 +65,13 @@ export class WhatsappService {
       true,
     );
 
-    const context: AiPersonaContext = {
-      type: personaType,
-      userId: user.id.toString(),
-    };
-
     // Generate AI response
-    const aiResponse = await this.aiPersonasService.getEnhancedResponse(
-      message.body,
-      personaType,
-      context,
-    );
+    const aiResponse = this.aiPersonasService.getSystemPrompt(personaType);
 
-    const messages = Array.isArray(aiResponse.message)
-      ? aiResponse.message
-      : [aiResponse.message];
+    const messages = Array.isArray(aiResponse) ? aiResponse : [aiResponse];
 
     for (let i = 0; i < messages.length; i++) {
-      const msg = messages[i];
+      const msg = messages[i] as string;
       await this.userService.saveConversation(user.id, personaType, msg, false);
       await this.sendWhatsAppMessage(message.from, msg);
     }

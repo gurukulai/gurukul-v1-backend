@@ -14,7 +14,7 @@ import {
   SearchOptions,
   SearchResult,
 } from './interfaces/rag.interface';
-import { AiPersonaType } from '../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../ai-personas/interfaces';
 
 @Injectable()
 export class PersonaRagService {
@@ -39,7 +39,7 @@ export class PersonaRagService {
    */
   async addDocumentToPersona(
     content: string,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     metadata: Partial<DocumentMetadata> = {},
     options: DocumentProcessingOptions = {},
   ): Promise<string[]> {
@@ -74,7 +74,7 @@ export class PersonaRagService {
    * Add multiple documents efficiently to a persona-specific knowledge base
    */
   async addDocumentsToPersona(
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     documents: Array<{
       content: string;
       metadata?: Partial<DocumentMetadata>;
@@ -120,7 +120,7 @@ export class PersonaRagService {
    */
   async searchSimilarDocuments(
     query: string,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     options: SearchOptions = {},
   ): Promise<SearchResult[]> {
     this.logger.log(`Searching in ${personaType} database for: "${query}"`);
@@ -142,7 +142,7 @@ export class PersonaRagService {
    */
   async generatePersonaRAGResponse(
     query: string,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     searchOptions: SearchOptions = {},
   ): Promise<RAGResponse> {
     try {
@@ -191,8 +191,6 @@ export class PersonaRagService {
 
       const response = await this.llmService.chatWithOpenAI(
         `Context:\n${context}\n\nQuestion: ${query}`,
-        this.configService.get<string>('OPENAI_API_KEY'),
-        this.configService.get<string>('OPENAI_MODEL') || 'gpt-3.5-turbo',
         new SystemMessage(systemPrompt),
       );
 
@@ -255,7 +253,7 @@ export class PersonaRagService {
    */
   async deleteDocument(
     documentId: string,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<void> {
     await this.personaEmbeddingsManager.deleteDocument(documentId, personaType);
     this.logger.log(
@@ -269,7 +267,7 @@ export class PersonaRagService {
   async updateDocumentMetadata(
     documentId: string,
     metadata: Partial<DocumentMetadata>,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<void> {
     await this.personaEmbeddingsManager.updateDocumentMetadata(
       documentId,
@@ -284,7 +282,7 @@ export class PersonaRagService {
   /**
    * Get document statistics for a specific persona
    */
-  async getPersonaDocumentStats(personaType: AiPersonaType) {
+  async getPersonaDocumentStats(personaType: PersonaType) {
     const stats =
       await this.personaEmbeddingsManager.getPersonaDocumentStats(personaType);
     this.logger.log(`Retrieved stats for ${personaType} database`);
@@ -303,7 +301,7 @@ export class PersonaRagService {
   /**
    * Clear all documents from a persona-specific database
    */
-  async clearPersonaDocuments(personaType: AiPersonaType): Promise<number> {
+  async clearPersonaDocuments(personaType: PersonaType): Promise<number> {
     const deletedCount =
       await this.personaEmbeddingsManager.clearPersonaDocuments(personaType);
     this.logger.log(
@@ -315,7 +313,7 @@ export class PersonaRagService {
   /**
    * Debug method to get raw documents and check embeddings for a persona
    */
-  async debugGetPersonaDocuments(personaType: AiPersonaType) {
+  async debugGetPersonaDocuments(personaType: PersonaType) {
     const result =
       await this.personaEmbeddingsManager.debugGetPersonaDocuments(personaType);
     this.logger.log(`Retrieved debug document info for ${personaType}`);
@@ -325,7 +323,7 @@ export class PersonaRagService {
   /**
    * Check if a persona database has documents
    */
-  async hasPersonaDocuments(personaType: AiPersonaType): Promise<boolean> {
+  async hasPersonaDocuments(personaType: PersonaType): Promise<boolean> {
     const stats = await this.getPersonaDocumentStats(personaType);
     return stats.totalDocuments > 0;
   }
@@ -335,7 +333,7 @@ export class PersonaRagService {
    */
   async getAvailablePersonas(): Promise<
     Array<{
-      personaType: AiPersonaType;
+      personaType: PersonaType;
       displayName: string;
       totalDocuments: number;
       hasDocuments: boolean;
@@ -344,8 +342,8 @@ export class PersonaRagService {
     const allStats = await this.getAllPersonasStats();
 
     return Object.entries(allStats).map(([personaType, stats]) => ({
-      personaType: personaType as AiPersonaType,
-      displayName: this.getPersonaDisplayName(personaType as AiPersonaType),
+      personaType: personaType as PersonaType,
+      displayName: this.getPersonaDisplayName(personaType as PersonaType),
       totalDocuments: stats.totalDocuments,
       hasDocuments: stats.totalDocuments > 0,
     }));
@@ -354,7 +352,7 @@ export class PersonaRagService {
   /**
    * Get persona display name
    */
-  private getPersonaDisplayName(personaType: AiPersonaType): string {
+  private getPersonaDisplayName(personaType: PersonaType): string {
     const config = {
       PRIYA: 'AI Girlfriend (Priya)',
       THERAPIST: 'AI Therapist',
@@ -362,29 +360,5 @@ export class PersonaRagService {
       CAREER: 'AI Career Counselor',
     };
     return config[personaType];
-  }
-
-  /**
-   * Migrate documents from old unified table to persona-specific tables
-   * This method helps transition from the old system to the new persona-specific system
-   */
-  async migrateFromUnifiedDatabase(): Promise<{
-    migrated: Record<AiPersonaType, number>;
-    total: number;
-  }> {
-    // This would be implemented if migrating from the old system
-    // For now, return empty migration
-    this.logger.log(
-      'No migration needed - using persona-specific databases from the start',
-    );
-    return {
-      migrated: {
-        PRIYA: 0,
-        THERAPIST: 0,
-        DIETICIAN: 0,
-        CAREER: 0,
-      },
-      total: 0,
-    };
   }
 }

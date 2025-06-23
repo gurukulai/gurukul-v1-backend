@@ -12,15 +12,28 @@ export class PineconeService implements OnModuleInit {
   private embeddings: OpenAIEmbeddings | undefined;
 
   onModuleInit() {
+    // Initialize Pinecone client
     this.pinecone = new PineconeClient();
-    const pineconeIndex = String(process.env.PINECONE_INDEX);
+
+    const apiKey = process.env.PINECONE_API_KEY;
+    const pineconeIndex = process.env.PINECONE_INDEX;
+
+    if (!apiKey) throw new Error('PINECONE_API_KEY is not set');
     if (!pineconeIndex) throw new Error('PINECONE_INDEX is not set');
+
+    this.pinecone = new PineconeClient({
+      apiKey,
+    });
+
     this.pineconeIndex = this.pinecone.Index(pineconeIndex);
 
     // Use advanced OpenAI embedding model
+    const openAIApiKey = process.env.OPENAI_API_KEY;
+    if (!openAIApiKey) throw new Error('OPENAI_API_KEY is not set');
+
     this.embeddings = new OpenAIEmbeddings({
       model: 'text-embedding-3-large', // 3072 dimensions for better accuracy
-      openAIApiKey: process.env.OPENAI_API_KEY,
+      openAIApiKey,
     });
   }
 
@@ -31,7 +44,6 @@ export class PineconeService implements OnModuleInit {
     return await PineconeStore.fromExistingIndex(this.embeddings, {
       pineconeIndex: this.pineconeIndex,
       namespace: expertNamespace,
-      maxConcurrency: 5,
     });
   }
 

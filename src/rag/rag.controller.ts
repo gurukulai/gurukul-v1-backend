@@ -16,7 +16,7 @@ import {
   SearchOptions,
   DocumentType,
 } from './interfaces/rag.interface';
-import { AiPersonaType } from '../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../ai-personas/interfaces';
 
 @Controller('rag')
 export class RagController {
@@ -47,7 +47,7 @@ export class RagController {
     @Query('query') query: string,
     @Query('limit') limit?: string,
     @Query('threshold') threshold?: string,
-    @Query('personaType') personaType?: AiPersonaType,
+    @Query('personaType') personaType?: PersonaType,
     @Query('category') category?: string,
     @Query('documentType') documentType?: DocumentType,
     @Query('includeMetadata') includeMetadata?: string,
@@ -74,14 +74,14 @@ export class RagController {
     @Body()
     body: {
       query: string;
-      personaType?: AiPersonaType;
+      personaType?: PersonaType;
       searchOptions?: SearchOptions;
     },
   ) {
     this.logger.log(`RAG query: "${body.query}"`);
     const result = await this.ragService.generateRAGResponse(
       body.query,
-      body.personaType,
+      body.personaType as PersonaType,
       body.searchOptions,
     );
     return { success: true, ...result };

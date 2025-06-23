@@ -14,7 +14,7 @@ import {
   SearchOptions,
   SearchResult,
 } from './interfaces/rag.interface';
-import { AiPersonaType } from '../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../ai-personas/interfaces';
 
 @Injectable()
 export class RagService {
@@ -88,7 +88,7 @@ export class RagService {
    */
   async generateRAGResponse(
     query: string,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     searchOptions: SearchOptions = {},
   ): Promise<RAGResponse> {
     try {
@@ -129,8 +129,6 @@ export class RagService {
 
       const response = await this.llmService.chatWithOpenAI(
         `Context:\n${context}\n\nQuestion: ${query}`,
-        this.configService.get<string>('OPENAI_API_KEY'),
-        this.configService.get<string>('OPENAI_MODEL') || 'gpt-3.5-turbo',
         new SystemMessage(systemPrompt),
       );
 

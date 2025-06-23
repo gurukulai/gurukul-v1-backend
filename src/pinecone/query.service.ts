@@ -1,6 +1,6 @@
 // src/query/query.service.ts
 import { Injectable } from '@nestjs/common';
-import { PineconeService } from '../pinecone/pinecone.service';
+import { PineconeService } from './pinecone.service';
 import { ExpertsService } from './experts.service';
 import { QueryIntelligenceService } from './query-intelligence.service';
 
@@ -29,7 +29,12 @@ export class QueryService {
     const expert = this.expertsService.getExpert(expertId);
 
     if (!expert) {
-      throw new Error(`Expert with ID ${expertId} not found`);
+      throw new Error(`Expert class with ID ${expertId} not found`);
+    }
+
+    // Check if expert class is active
+    if (expert.isActive === false) {
+      throw new Error(`Expert class ${expert.name} is currently inactive`);
     }
 
     let usedVectorSearch = false;

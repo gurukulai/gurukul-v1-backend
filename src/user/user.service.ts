@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AiPersonaType } from '../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../ai-personas/interfaces';
 import { Message, User } from '@prisma/client';
 
 @Injectable()
@@ -28,7 +28,7 @@ export class UserService {
 
   async getConversationHistory(
     userId: number,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<Message[]> {
     return await this.prisma.message.findMany({
       where: { userId, personaType },
@@ -39,7 +39,7 @@ export class UserService {
 
   async saveConversation(
     userId: number,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     message: string,
     fromUser: boolean,
     metadata?: unknown,
@@ -57,7 +57,7 @@ export class UserService {
 
   async getLatestMessages(
     userId: number,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     limit: number,
   ): Promise<Message[]> {
     return await this.prisma.message.findMany({

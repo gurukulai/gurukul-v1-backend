@@ -29,7 +29,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RagService } from '../rag.service';
 import { UserService } from '../../user/user.service';
-import { AiPersonaType } from '../../ai-personas/interfaces/ai-persona.interface';
+import { PersonaType } from '../../ai-personas/interfaces';
 import {
   DocumentType,
   SearchOptions,
@@ -61,7 +61,7 @@ interface RAGInteractionMetadata {
   type: string;
   confidence: number;
   sourcesCount: number;
-  personaType: AiPersonaType;
+  personaType: PersonaType;
   timestamp: string;
 }
 
@@ -90,7 +90,7 @@ export class WhatsAppRAGIntegration {
   async processWhatsAppMessage(
     message: string,
     userId: number,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<RAGProcessingResult> {
     // Check if message indicates user wants document-based information
     const ragTriggers = [
@@ -200,7 +200,7 @@ export class WhatsAppRAGIntegration {
     userId: number,
     query: string,
     response: RAGResponse,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
   ): Promise<void> {
     const metadata: RAGInteractionMetadata = {
       type: 'rag_interaction',
@@ -236,7 +236,7 @@ export class WhatsAppRAGIntegration {
    */
   async addConversationToKnowledgeBase(
     userId: number,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     conversationHistory: ConversationHistoryItem[],
   ): Promise<void> {
     // Filter for meaningful conversations (more than 2 exchanges)
@@ -273,7 +273,7 @@ export class WhatsAppRAGIntegration {
    */
   async suggestRelevantDocuments(
     userId: number,
-    personaType: AiPersonaType,
+    personaType: PersonaType,
     limit: number = 3,
   ): Promise<string[]> {
     // Get recent user messages
@@ -369,7 +369,7 @@ export class WhatsAppRAGIntegration {
     topCategories: string[];
   }> {
     // Get user's conversation history to analyze RAG usage
-    const allPersonas: AiPersonaType[] = [
+    const allPersonas: PersonaType[] = [
       'THERAPIST',
       'DIETICIAN',
       'CAREER',

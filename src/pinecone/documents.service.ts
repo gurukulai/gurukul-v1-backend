@@ -1,6 +1,6 @@
 // src/documents/documents.service.ts
 import { Injectable } from '@nestjs/common';
-import { PineconeService } from '../pinecone/pinecone.service';
+import { PineconeService } from './pinecone.service';
 import { ExpertsService } from './experts.service';
 import { UploadDocumentDto } from './dto/experts.dto';
 
@@ -38,10 +38,17 @@ export class DocumentsService {
     // Estimate chunk count (rough calculation)
     const estimatedChunks = Math.ceil(uploadDocumentDto.content.length / 800);
 
+    // Update expert class vector count
+    // const newVectorCount = (expert.vectorCount || 0) + estimatedChunks;
+    // this.expertsService.updateExpertVectorCount(
+    //   uploadDocumentDto.expertId,
+    //   newVectorCount,
+    // );
+
     return {
       success: true,
       chunksCreated: estimatedChunks,
-      message: `Document uploaded successfully to expert ${expert.name}`,
+      message: `Document uploaded successfully to expert class ${expert.name}`,
     };
   }
 }
