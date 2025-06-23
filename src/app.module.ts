@@ -7,6 +7,7 @@ import { AiPersonasModule } from './ai-personas/ai-personas.module';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './auth/auth.module';
     UserModule,
     PrismaModule,
     AuthModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

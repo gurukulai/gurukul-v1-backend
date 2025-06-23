@@ -24,16 +24,33 @@ model User {
   authProvider String? // 'google' or 'phone'
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  lastActive   DateTime  @default(now())
+  messages     Message[]
+  chats        Chat[]
+}
+
+model Chat {
+  id           String    @id @default(cuid())
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentId      String // 'therapist', 'dietician', 'career', 'priya'
+  title        String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  messageCount Int       @default(0)
+  lastMessage  String?
   messages     Message[]
 }
 
 model Message {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  personaType String
-  message     String
-  fromUser    Boolean // true if from user, false if from AI
-  timestamp   DateTime @default(now())
-  metadata    Json? // For storing additional message data like image URLs, document info, etc.
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  agentId   String
+  content   String
+  role      String // 'user' or 'assistant'
+  timestamp DateTime @default(now())
+  metadata  Json? // For storing additional message data like confidence, read status, etc.
 }
