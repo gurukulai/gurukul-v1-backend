@@ -18,11 +18,15 @@ import {
   MarkMessagesReadDto,
 } from './chat.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { WebSocketService } from './websocket.service';
 
 @Controller('chats')
 @UseGuards(JwtAuthGuard)
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly webSocketService: WebSocketService,
+  ) {}
 
   @Get()
   async getAllChats(@Request() req: any) {
@@ -147,5 +151,16 @@ export class ChatController {
       markMessagesReadDto,
     );
     return result;
+  }
+
+  @Get('ws/health')
+  async getWebSocketHealth() {
+    const stats = this.webSocketService.getConnectionStats();
+    return {
+      status: 'healthy',
+      connections: stats.totalConnections,
+      activeChats: stats.activeChats,
+      uptime: process.uptime(),
+    };
   }
 }

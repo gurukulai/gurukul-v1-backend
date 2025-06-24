@@ -415,27 +415,58 @@ export class ChatService {
   }
 
   private async generateMockAIResponse(
-    systemPrompt: string,
-    messages: any[],
+    _systemPrompt: string,
+    messages: { role: string; content: string }[],
   ): Promise<string> {
-    // Mock AI response based on the persona and system prompt
-    const lastMessage = messages[messages.length - 1].content.toLowerCase();
+    try {
+      const lastMessage = (messages[messages.length - 1] as { content: string })
+        .content;
 
-    // Use system prompt to determine response style
-    if (systemPrompt.includes('therapist')) {
-      if (lastMessage.includes('anxious') || lastMessage.includes('stress')) {
-        return "I understand you're feeling anxious. Let's explore this together. Can you tell me more about what's causing this anxiety? Remember, it's completely normal to feel this way, and I'm here to support you.";
+      const response = await fetch('http://localhost:1511/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: lastMessage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } else if (systemPrompt.includes('dietician')) {
-      if (lastMessage.includes('diet') || lastMessage.includes('nutrition')) {
-        return "I'd be happy to help you with your nutrition goals! To provide the best advice, could you tell me about your current eating habits, any dietary restrictions, and what you're hoping to achieve?";
+
+      const data: { success: boolean; response: string; error: string | null } =
+        await response.json();
+
+      if (data.success && data.response) {
+        return data.response;
+      } else {
+        throw new Error(data.error || 'No response from AI service');
       }
-    } else if (systemPrompt.includes('career')) {
-      if (lastMessage.includes('career') || lastMessage.includes('job')) {
-        return "I'm here to help you with your career journey! What specific aspect would you like to discuss? Whether it's skill development, job searching, or career planning, I'm ready to assist.";
-      }
+    } catch (error) {
+      console.error('Error calling AI service:', error);
+      // Fallback to default response if API call fails
+      return "Thank you for sharing that with me. I'm here to listen and support you. How can I help you further today?";
     }
+    // // Mock AI response based on the persona and system prompt
+    // const lastMessage = messages[messages.length - 1].content.toLowerCase();
 
-    return "Thank you for sharing that with me. I'm here to listen and support you. How can I help you further today?";
+    // // Use system prompt to determine response style
+    // if (systemPrompt.includes('therapist')) {
+    //   if (lastMessage.includes('anxious') || lastMessage.includes('stress')) {
+    //     return "I understand you're feeling anxious. Let's explore this together. Can you tell me more about what's causing this anxiety? Remember, it's completely normal to feel this way, and I'm here to support you.";
+    //   }
+    // } else if (systemPrompt.includes('dietician')) {
+    //   if (lastMessage.includes('diet') || lastMessage.includes('nutrition')) {
+    //     return "I'd be happy to help you with your nutrition goals! To provide the best advice, could you tell me about your current eating habits, any dietary restrictions, and what you're hoping to achieve?";
+    //   }
+    // } else if (systemPrompt.includes('career')) {
+    //   if (lastMessage.includes('career') || lastMessage.includes('job')) {
+    //     return "I'm here to help you with your career journey! What specific aspect would you like to discuss? Whether it's skill development, job searching, or career planning, I'm ready to assist.";
+    //   }
+    // }
+
+    // return "Thank hey you for sharing that with me. I'm here to listen and support you. How can I help you further today?";
   }
 }
