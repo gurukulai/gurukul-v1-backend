@@ -3,6 +3,12 @@ import { Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SocketMessage, ConnectionInfo } from './interfaces/socket.interface';
+import {
+  TypingEvent,
+  ReadReceiptEvent,
+  ChatUpdateEvent,
+  MessageEvent,
+} from './interfaces/socket.interface';
 
 @Injectable()
 export class WebSocketService {
@@ -44,7 +50,7 @@ export class WebSocketService {
     }
   }
 
-  async handleMessage(client: Socket, payload: any): Promise<boolean> {
+  async handleMessage(client: Socket, payload: MessageEvent): Promise<boolean> {
     try {
       const connection = this.connections.get(client.id);
       if (!connection) {
@@ -58,7 +64,7 @@ export class WebSocketService {
         return false;
       }
 
-      const { chatId, content, agentId, messageId } = payload.data;
+      const { chatId, content, agentId, messageId } = payload;
 
       // Validate message format
       if (!chatId || !content || !agentId) {
@@ -112,7 +118,7 @@ export class WebSocketService {
     }
   }
 
-  async handleTyping(client: Socket, payload: any): Promise<boolean> {
+  async handleTyping(client: Socket, payload: TypingEvent): Promise<boolean> {
     try {
       const connection = this.connections.get(client.id);
       if (!connection) {
@@ -120,7 +126,7 @@ export class WebSocketService {
         return false;
       }
 
-      const { chatId, agentId, isTyping } = payload.data;
+      const { chatId, agentId, isTyping } = payload;
 
       // Validate typing event
       if (!chatId || !agentId || typeof isTyping !== 'boolean') {
@@ -158,7 +164,10 @@ export class WebSocketService {
     }
   }
 
-  async handleReadReceipt(client: Socket, payload: any): Promise<boolean> {
+  async handleReadReceipt(
+    client: Socket,
+    payload: ReadReceiptEvent,
+  ): Promise<boolean> {
     try {
       const connection = this.connections.get(client.id);
       if (!connection) {
@@ -166,7 +175,7 @@ export class WebSocketService {
         return false;
       }
 
-      const { chatId, messageIds } = payload.data;
+      const { chatId, messageIds } = payload;
 
       // Validate read receipt
       if (!chatId || !messageIds || !Array.isArray(messageIds)) {
@@ -209,7 +218,10 @@ export class WebSocketService {
     }
   }
 
-  async handleChatUpdate(client: Socket, payload: any): Promise<boolean> {
+  async handleChatUpdate(
+    client: Socket,
+    payload: ChatUpdateEvent,
+  ): Promise<boolean> {
     try {
       const connection = this.connections.get(client.id);
       if (!connection) {
@@ -217,7 +229,7 @@ export class WebSocketService {
         return false;
       }
 
-      const { action, chatId } = payload.data;
+      const { action, chatId } = payload;
 
       // Validate chat update
       if (!action || !chatId || !['join', 'leave'].includes(action)) {

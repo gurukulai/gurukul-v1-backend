@@ -29,7 +29,7 @@ export class ChatController {
   ) {}
 
   @Get()
-  async getAllChats(@Request() req: any) {
+  async getAllChats(@Request() req: { user: { id: number } }) {
     const userId = req.user.id;
     const chats = await this.chatService.getAllChats(userId);
     return {
@@ -39,7 +39,10 @@ export class ChatController {
   }
 
   @Get(':chatId')
-  async getChat(@Param('chatId') chatId: string, @Request() req: any) {
+  async getChat(
+    @Param('chatId') chatId: string,
+    @Request() req: { user: { id: number } },
+  ) {
     const userId = req.user.id;
     const chat = await this.chatService.getChat(chatId, userId);
     return {
@@ -49,7 +52,10 @@ export class ChatController {
   }
 
   @Post()
-  async createChat(@Body() createChatDto: CreateChatDto, @Request() req: any) {
+  async createChat(
+    @Body() createChatDto: CreateChatDto,
+    @Request() req: { user: { id: number } },
+  ) {
     const userId = req.user.id;
     const chat = await this.chatService.createChat(userId, createChatDto);
     return {
@@ -62,7 +68,7 @@ export class ChatController {
   async sendMessage(
     @Param('chatId') chatId: string,
     @Body() sendMessageDto: SendMessageDto,
-    @Request() req: any,
+    @Request() req: { user: { id: number } },
   ) {
     const userId = req.user.id;
     const response = await this.chatService.sendMessage(
@@ -81,7 +87,7 @@ export class ChatController {
     @Param('chatId') chatId: string,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '50',
-    @Request() req: any,
+    @Request() req: { user: { id: number } },
   ) {
     const userId = req.user.id;
     const pageNum = parseInt(page, 10);
@@ -102,7 +108,7 @@ export class ChatController {
   async pollNewMessages(
     @Param('chatId') chatId: string,
     @Query('lastMessageId') lastMessageId: string,
-    @Request() req: any,
+    @Request() req: { user: { id: number } },
   ) {
     const userId = req.user.id;
     const messages = await this.chatService.pollNewMessages(
@@ -120,7 +126,7 @@ export class ChatController {
   async updateChatTitle(
     @Param('chatId') chatId: string,
     @Body() updateChatDto: UpdateChatDto,
-    @Request() req: any,
+    @Request() req: { user: { id: number } },
   ) {
     const userId = req.user.id;
     const result = await this.chatService.updateChatTitle(
@@ -132,7 +138,10 @@ export class ChatController {
   }
 
   @Delete(':chatId')
-  async deleteChat(@Param('chatId') chatId: string, @Request() req: any) {
+  async deleteChat(
+    @Param('chatId') chatId: string,
+    @Request() req: { user: { id: number } },
+  ) {
     const userId = req.user.id;
     const result = await this.chatService.deleteChat(chatId, userId);
     return result;
@@ -142,7 +151,7 @@ export class ChatController {
   async markMessagesAsRead(
     @Param('chatId') chatId: string,
     @Body() markMessagesReadDto: MarkMessagesReadDto,
-    @Request() req: any,
+    @Request() req: { user: { id: number } },
   ) {
     const userId = req.user.id;
     const result = await this.chatService.markMessagesAsRead(
@@ -154,7 +163,7 @@ export class ChatController {
   }
 
   @Get('ws/health')
-  async getWebSocketHealth() {
+  getWebSocketHealth() {
     const stats = this.webSocketService.getConnectionStats();
     return {
       status: 'healthy',

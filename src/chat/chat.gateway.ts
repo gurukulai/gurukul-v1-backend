@@ -10,7 +10,13 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { WebSocketService } from './websocket.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ConnectionInfo } from './interfaces/socket.interface';
+import {
+  ConnectionInfo,
+  MessageEvent,
+  TypingEvent,
+  ReadReceiptEvent,
+  ChatUpdateEvent,
+} from './interfaces/socket.interface';
 import { Logger } from '@nestjs/common';
 // import { JwtPayload } from '@supabase/supabase-js';
 
@@ -49,8 +55,12 @@ export class ChatGateway
 
   async handleConnection(client: Socket) {
     try {
-      // Extract JWT token from query parameters
-      const token = client.handshake.query.token as string;
+      // Extract JWT token from headers first, then fallback to query parameters
+      const authHeader = client.handshake.headers.authorization;
+      const token =
+        authHeader?.replace('Bearer ', '') ||
+        (client.handshake.query.token as string);
+
       if (!token) {
         client.emit('error', {
           type: 'error',
@@ -115,22 +125,22 @@ export class ChatGateway
   }
 
   @SubscribeMessage('message')
-  async handleMessage(client: Socket, payload: any) {
+  async handleMessage(client: Socket, payload: MessageEvent) {
     await this.webSocketService.handleMessage(client, payload);
   }
 
   @SubscribeMessage('typing')
-  async handleTyping(client: Socket, payload: any) {
+  async handleTyping(client: Socket, payload: TypingEvent) {
     await this.webSocketService.handleTyping(client, payload);
   }
 
   @SubscribeMessage('read_receipt')
-  async handleReadReceipt(client: Socket, payload: any) {
+  async handleReadReceipt(client: Socket, payload: ReadReceiptEvent) {
     await this.webSocketService.handleReadReceipt(client, payload);
   }
 
   @SubscribeMessage('chat_update')
-  async handleChatUpdate(client: Socket, payload: any) {
+  async handleChatUpdate(client: Socket, payload: ChatUpdateEvent) {
     await this.webSocketService.handleChatUpdate(client, payload);
   }
 
