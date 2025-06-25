@@ -51,23 +51,27 @@ export class WebSocketService {
   }
 
   async handleMessage(client: Socket, payload: MessageEvent): Promise<boolean> {
+    console.log('handleMessage', payload);
     try {
       const connection = this.connections.get(client.id);
       if (!connection) {
+        console.log('Connection not found');
         this.sendError(client, 'Connection not found');
         return false;
       }
 
       // Rate limiting
       if (!this.checkRateLimit(connection.userId, 'message')) {
+        console.log('Rate limit exceeded');
         this.sendError(client, 'Rate limit exceeded');
         return false;
       }
 
-      const { chatId, content, agentId, messageId } = payload;
+      const { chatId, content, agentId } = payload;
 
       // Validate message format
       if (!chatId || !content || !agentId) {
+        console.log('Invalid message format');
         this.sendError(client, 'Invalid message format');
         return false;
       }
@@ -78,6 +82,7 @@ export class WebSocketService {
       });
 
       if (!chat) {
+        console.log('Access denied to chat');
         this.sendError(client, 'Access denied to chat');
         return false;
       }
@@ -88,28 +93,24 @@ export class WebSocketService {
         connection.userId,
         { content, agentId },
       );
+      console.log('aiResponse', aiResponse);
 
-      // Broadcast AI response to chat room
-      this.broadcastToChat(chatId, {
-        type: 'message',
-        data: {
-          chatId,
-          message: {
-            id: aiResponse.id,
-            chatId: aiResponse.chatId,
-            userId: aiResponse.userId.toString(),
-            agentId: aiResponse.agentId,
-            content: aiResponse.content,
-            role: aiResponse.role,
-            timestamp: aiResponse.timestamp.toISOString(),
-            metadata: aiResponse.metadata,
-          },
-          messageId,
+      // Send AI response to the client in the format frontend expects
+      this.sendToConnection(client.id, 'message', {
+        chatId,
+        message: {
+          id: aiResponse.id,
+          chatId: aiResponse.chatId,
+          userId: aiResponse.userId.toString(),
+          agentId: aiResponse.agentId,
+          content: aiResponse.content,
+          role: aiResponse.role,
+          timestamp: aiResponse.timestamp.toISOString(),
+          metadata: aiResponse.metadata,
         },
-        timestamp: Date.now(),
-        messageId,
+        messageId: payload.messageId || `temp-${Date.now()}`,
       });
-
+      console.log('message sent');
       return true;
     } catch (error) {
       this.logger.error('Message handling error:', error);
@@ -256,16 +257,12 @@ export class WebSocketService {
         //   connection.userId,
         // );
         client.emit('chat_update', {
-          type: 'chat_update',
-          data: {
-            chatId,
-            updates: {
-              title: chat.title,
-              messageCount: chat.messageCount,
-              lastMessage: chat.lastMessage,
-            },
+          chatId,
+          updates: {
+            title: chat.title,
+            messageCount: chat.messageCount,
+            lastMessage: chat.lastMessage,
           },
-          timestamp: Date.now(),
         });
       } else if (action === 'leave') {
         this.leaveChatRoom(client.id, chatId);
@@ -324,9 +321,8 @@ export class WebSocketService {
 
   private sendError(client: Socket, message: string, code: number = 400) {
     client.emit('error', {
-      type: 'error',
-      data: { errorMessage: message, code },
-      timestamp: Date.now(),
+      errorMessage: message,
+      code,
     });
   }
 
@@ -356,5 +352,79 @@ export class WebSocketService {
       connections: Array.from(this.connections.keys()),
       chatRooms: Array.from(this.chatRooms.keys()),
     };
+  }
+
+  // Send message to a specific user by userId
+  sendToUser(userId: number, eventType: string, data: Record<string, unknown>) {
+    this.connections.forEach((connection) => {
+      if (connection.userId === userId && connection.ws.connected) {
+        connection.ws.emit(eventType, {
+          type: eventType,
+          data,
+          timestamp: Date.now(),
+        });
+      }
+    });
+  }
+
+  // Send message to a specific connection by connectionId
+  sendToConnection(
+    connectionId: string,
+    eventType: string,
+    data: Record<string, unknown>,
+  ) {
+    const connection = this.connections.get(connectionId);
+    if (connection && connection.ws.connected) {
+      connection.ws.emit(eventType, data);
+    }
+  }
+
+  // Broadcast to all connected clients
+  broadcastToAll(eventType: string, data: Record<string, unknown>) {
+    this.connections.forEach((connection) => {
+      if (connection.ws.connected) {
+        connection.ws.emit(eventType, {
+          type: eventType,
+          data,
+          timestamp: Date.now(),
+        });
+      }
+    });
+  }
+
+  // Send notification to a specific user
+  sendNotification(
+    userId: number,
+    title: string,
+    message: string,
+    type: 'info' | 'success' | 'warning' | 'error' = 'info',
+  ) {
+    this.sendToUser(userId, 'notification', {
+      title,
+      message,
+      type,
+    });
+  }
+
+  // Send system message to a chat room
+  sendSystemMessage(chatId: string, message: string) {
+    // Use a custom event type for system messages
+    const chatRoom = this.chatRooms.get(chatId);
+    if (!chatRoom) return;
+
+    chatRoom.forEach((connectionId) => {
+      const connection = this.connections.get(connectionId);
+      if (connection && connection.ws.connected) {
+        connection.ws.emit('system_message', {
+          type: 'system_message',
+          data: {
+            chatId,
+            message,
+            timestamp: new Date().toISOString(),
+          },
+          timestamp: Date.now(),
+        });
+      }
+    });
   }
 }

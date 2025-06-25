@@ -12,7 +12,7 @@ import { Request } from 'express';
 export class JwtAuthGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
 
@@ -23,6 +23,9 @@ export class JwtAuthGuard implements CanActivate {
     try {
       console.log('token', token);
       // TODO verify why verifyAsync is giving wrong results
+      // const payload = await this.jwtService.verifyAsync(token, {
+      //   secret: process.env.JWT_SECRET,
+      // });
       const payload = this.jwtService.decode<JwtPayload>(token);
       console.log('payload', payload);
       request.user = {

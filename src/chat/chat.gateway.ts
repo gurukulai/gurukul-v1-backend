@@ -24,6 +24,9 @@ import { Logger } from '@nestjs/common';
   cors: {
     origin: '*',
   },
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Authorization'],
+  credentials: true,
   namespace: '/ws',
 })
 export class ChatGateway
@@ -63,9 +66,8 @@ export class ChatGateway
 
       if (!token) {
         client.emit('error', {
-          type: 'error',
-          data: { errorMessage: 'Authentication token required', code: 401 },
-          timestamp: Date.now(),
+          errorMessage: 'Authentication token required',
+          code: 401,
         });
         client.disconnect();
         return;
@@ -82,9 +84,8 @@ export class ChatGateway
 
       if (!user) {
         client.emit('error', {
-          type: 'error',
-          data: { errorMessage: 'Authentication failed', code: 401 },
-          timestamp: Date.now(),
+          errorMessage: 'Authentication failed',
+          code: 401,
         });
         client.disconnect();
         return;
@@ -111,9 +112,8 @@ export class ChatGateway
     } catch (error) {
       this.logger.error('Connection error:', error);
       client.emit('error', {
-        type: 'error',
-        data: { errorMessage: 'Authentication failed', code: 401 },
-        timestamp: Date.now(),
+        errorMessage: 'Authentication failed',
+        code: 401,
       });
       client.disconnect();
     }
@@ -148,10 +148,6 @@ export class ChatGateway
   handlePing(client: Socket) {
     this.webSocketService.updateLastPing(client.id);
 
-    client.emit('pong', {
-      type: 'pong',
-      data: { timestamp: Date.now() },
-      timestamp: Date.now(),
-    });
+    client.emit('pong', { timestamp: Date.now() });
   }
 }

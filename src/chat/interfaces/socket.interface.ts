@@ -1,3 +1,6 @@
+import { JsonValue } from '@prisma/client/runtime/library';
+import { Socket } from 'socket.io';
+
 export interface SocketMessage {
   type:
     | 'message'
@@ -35,7 +38,7 @@ export interface SocketMessageData {
     content: string;
     role: string;
     timestamp: string;
-    metadata: any;
+    metadata: JsonValue;
   };
   timestamp?: number;
   errorMessage?: string;
@@ -44,7 +47,7 @@ export interface SocketMessageData {
 
 export interface ConnectionInfo {
   userId: number;
-  ws: any;
+  ws: Socket;
   joinedChats: Set<string>;
   lastPing: number;
   connectionId: string;
